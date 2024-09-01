@@ -29,7 +29,7 @@ apt install mpv curl gzip
 You need install `EPGTV` **directory** inside `$HOME/.config/mpv/scripts/`
 
 ```
-git clone https://github.com/blogdron/EPGTV -o $HOME/.config/mpv/scripts/EPGTV 
+git clone https://github.com/blogdron/EPGTV  $HOME/.config/mpv/scripts/EPGTV 
 ```
 
 ## Usage
