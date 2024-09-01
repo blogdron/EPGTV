@@ -52,3 +52,19 @@ EPG TV cache location stored in
 $HOME/.cache/EPGTV/
 ```
 
+## Correct IPTV M3U example 
+
+```
+#EXTM3U url-tvg="http://epg.it999.ru/ru2.xml.gz, https://iptvx.one/epg/epg.xml.gz" tvg-shift="+3"
+#EXTINF:-1 tvg-id="pervy" tvg-logo="https://epgx.site/p/pervy.png" group-title="Общественные",Первый (HD ready)
+http://edge4.1internet.tv/dash-live2/streams/1tv-dvr/1tvdash.mpd
+
+```
+
+For get and find TV information `M3U` playlist must have 
+
+* `url-tvg` tag with link to FILE or URL, with plain XML data or gz/zip archive   
+* `tvg-id` name for find channel from M3U inside EPG
+
+Some `IPTV M3U` no have `tvg-id` in this case, an alternative search mechanism   
+is used by name and/or end of the link  

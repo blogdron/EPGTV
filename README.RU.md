@@ -53,4 +53,19 @@ $HOME/.cache/EPGTV/
 ```
 
 
+## Корректный пример IPTV M3U
 
+```
+#EXTM3U url-tvg="http://epg.it999.ru/ru2.xml.gz, https://iptvx.one/epg/epg.xml.gz" tvg-shift="+3"
+#EXTINF:-1 tvg-id="pervy" tvg-logo="https://epgx.site/p/pervy.png" group-title="Общественные",Первый (HD ready)
+http://edge4.1internet.tv/dash-live2/streams/1tv-dvr/1tvdash.mpd
+
+```
+
+Для получения ТВ иформации, `M3U`  плейлист должен иметь
+
+* `url-tvg`  тег с ссылкой на `файл` или `URL` на текстовые `XML` данные или архивы gz/zip
+* `tvg-id` идентификатор канала поиска канала и его телепрограммы в `EPG` данных
+
+Некоторые `IPTV M3U` не имеют `tvg-id`, в этом случае используется другой механизм
+поиска, поис ведётся по названию потока в `M3U` или по окончанию ссылки потока
