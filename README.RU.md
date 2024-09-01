@@ -1,6 +1,6 @@
 # EPGTV - Программа телепередач для mpv плеера
 
-# [README on English language](README.md)
+## [README on English language](README.md)
 
 Простое отображение `EPG` информации для `IPTV M3U` плейлистов в [mpv](https://mpv.io).  
 `EPGTV` это просто чуть расширенный форк проекта [mpvEPG v0.3](https://github.com/dafyk/mpvEPG)  

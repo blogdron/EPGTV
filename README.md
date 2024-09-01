@@ -1,6 +1,6 @@
 # EPGTV - TV program viewer for mpv player
 
-# [README на Русском языке](README.RU.md)
+## [README на Русском языке](README.RU.md)
 
 Simple `EPG` information for `IPTV M3U` playlist in [mpv](https://mpv.io).  
 `EPGTV` is simple extended fork of [mpvEPG v0.3](https://github.com/dafyk/mpvEPG)  
