@@ -8,6 +8,7 @@
 --               Copyright © 2020 Peter Žember; MIT Licensed                 --
 --             See https://github.com/dafyk/mpvEPG for details.              --
 --                                                                           --
+--               Copyright © 2020 Peter Žember; MIT Licensed                 --
 --               Copyright © 2024 Fedor Elizarov; MIT Licensed               --
 --             See https://github.com/blogdron/EPGTV for details.            --
 -------------------------------------------------------------------------------
