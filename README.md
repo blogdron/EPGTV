@@ -58,7 +58,6 @@ $HOME/.cache/EPGTV/
 #EXTM3U url-tvg="http://epg.it999.ru/ru2.xml.gz, https://iptvx.one/epg/epg.xml.gz" tvg-shift="+3"
 #EXTINF:-1 tvg-id="pervy" tvg-logo="https://epgx.site/p/pervy.png" group-title="Общественные",Первый (HD ready)
 http://edge4.1internet.tv/dash-live2/streams/1tv-dvr/1tvdash.mpd
-
 ```
 
 For get and find TV information `M3U` playlist must have 
