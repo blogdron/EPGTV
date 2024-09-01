@@ -1,4 +1,4 @@
-# EPGTV - Программа телепередач для mpv плеера
+# EPGTV - Программа телепередач для mpv плеера (В разработке)
 
 ## [README on English language](README.md)
 

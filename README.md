@@ -1,4 +1,4 @@
-# EPGTV - TV program viewer for mpv player
+# EPGTV - TV program viewer for mpv player (Work In Progress)
 
 ## [README на Русском языке](README.RU.md)
 
