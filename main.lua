@@ -107,7 +107,13 @@ local translates =
 -------------------------------------------------------------------------------
 local msg_text = translates[os.getenv('LANG')] or translates['en_US.UTF-8']
 -------------------------------------------------------------------------------
-local cache_dir = os.getenv('HOME')..'/.cache/EPGTV'
+local home_dir = os.getenv('HOME')
+if not home_dir then
+   mp.set_osd_ass(0, 0, "EPGTV Error: No have 'HOME' envilopment variable");
+   io.write("EPGTV Error: No have 'HOME' envilopment variable","\n");
+   return
+end
+local cache_dir = home_dir..'/.cache/EPGTV'
 -------------------------------------------------------------------------------
 local config = {
         curlPath  = '/usr/bin/curl',
