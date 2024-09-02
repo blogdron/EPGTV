@@ -1,7 +1,7 @@
 # EPGTV - TV program viewer for mpv player
 
 ```diff
--(Work In Progress) Only Linux or maybe some other \*NIX is supported
+-(Work In Progress) Only Linux or maybe some other *NIX is supported
 ```
 
 ## [README на Русском языке](README.RU.md)
