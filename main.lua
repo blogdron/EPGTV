@@ -366,36 +366,7 @@ local function new_file_is_m3u()
       end
       return false
 end
-
 -------------------------------------------------------------------------------
--- Utilite for extract gz archive to file
---[[---------------------------------------------------------------------------
-local function extract_file_to_file(source_file,output_file)
-      if not source_file or output_file then
-         return false
-      end
-      local data = utils.subprocess(
-      {
-          capture_size   = 1024*1024*1024,
-          cancellable    = false,
-          capture_stdout = true ,
-          args = { config.zcatPath, source_file }
-      })
-      if data.status ~= 0 then
-         return false
-      end
-      local filehndl = io.open(output_file,'w')
-      if not filehndl then
-         return false
-      end
-      filehndl:write(data.stdout)
-      filehndl:flush()
-      filehndl:close()
-      data.stdout = nil
-      collectgarbage("collect")
-      return true
-end
---]]---------------------------------------------------------------------------
 -- Utilite for extract gz archive in memory
 -------------------------------------------------------------------------------
 local function extract_file_to_data(source_file)
