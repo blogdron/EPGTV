@@ -36,6 +36,12 @@ apt install mpv curl gzip
 git clone https://github.com/blogdron/EPGTV  $HOME/.config/mpv/scripts/EPGTV
 ```
 
+## Обновление 
+
+```
+cd $HOME/.config/mpv/scripts/EPGTV && git pull
+```
+
 ## Использование
 
 `mpv iptv.m3u` или `mpv https://example.com/iptv.m3u`

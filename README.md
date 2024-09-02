@@ -36,6 +36,12 @@ You need install `EPGTV` **directory** inside `$HOME/.config/mpv/scripts/`
 git clone https://github.com/blogdron/EPGTV  $HOME/.config/mpv/scripts/EPGTV
 ```
 
+## Update
+
+```
+cd $HOME/.config/mpv/scripts/EPGTV && git pull
+```
+
 ## Usage
 
 `mpv iptv.m3u` or `mpv https://example.com/iptv.m3u`
