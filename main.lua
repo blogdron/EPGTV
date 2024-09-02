@@ -839,6 +839,9 @@ end
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
 local function show_epg()
+  if not curr_playlist then
+     return
+  end
   if timer then
      timer:kill()
      timer = nil
@@ -937,6 +940,7 @@ local function load_epg()
     if playlist == curr_playlist and playlist ~= tmp_list then
        return
     end
+
     if not curr_playlist then
        curr_playlist = playlist
        prev_playlist = curr_playlist
