@@ -145,7 +145,7 @@ local function message(msg)
        ass:new_event() --------------- progress bar background
        ass:pos(0, 0) -----------------
        ass:append('{\\bord2}') ------- border size
-       ass:append('{\\1a&80&}') ------- alpha
+       ass:append('{\\1a&80&}') ------ alpha
        ass:append('{\\1c&000000&}') -- background color
        ass:append('{\\3c&000000&}') -- border color
        ass:append('{\\1a&80&}') ------ alpha
@@ -154,13 +154,13 @@ local function message(msg)
        ass:draw_stop()----------------
 
        ass:new_event() --------------- progress bar background
-       ass:append('{\\an8}')
-       ass:append('{\\q0}')
-       ass:append('{\\bord2}')
+       ass:append('{\\an8}') --------- text align
+       ass:append('{\\q0}') ---------- text wrap mode
+       ass:append('{\\bord2}') ------- border size
        ass:append('{\\shad0}') ------- shadow
        ass:append('{\\1c&54E5B2&}') -- background color
        ass:append('{\\3c&000000&}') -- border color
-       ass:append('{\\fs15\\b1}')
+       ass:append('{\\fs15\\b1}') ---- font size
        ass:append(msg or '???')
        mp.set_osd_ass(0, 0, ass.text)
        ass.text = ''
@@ -225,7 +225,6 @@ local function progressBar(percent)
     ass:append('{\\1c&00FBFE&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
-
   end
 end
 
