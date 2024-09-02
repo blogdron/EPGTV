@@ -839,7 +839,7 @@ end
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
 local function show_epg()
-  if not curr_playlist then
+  if not new_file_is_m3u() then
      return
   end
   if timer then
