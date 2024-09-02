@@ -227,7 +227,6 @@ local function progressBar(percent)
     ass:append(os.date('%H:%M')) --
   end
 end
-
 -------------------------------------------------------------------------------
 -- Force create directory for cache
 -- If Failed exit from script
@@ -798,7 +797,7 @@ local function next_programms()
        timer:kill()
        timer = nil
     end
-    table.remove(current_program_list,2)
+    table.remove(current_program_list,1)
     ov.data = table.concat(current_program_list)
     ov:update()
     local w, h = mp.get_osd_size()
