@@ -218,7 +218,7 @@ local function progressBar(percent)
     ass:draw_stop()----------------
 
     ass:new_event() --------------- clock
-    ass:pos(w-117, 20) ------------
+    ass:pos(w-128, 20) ------------
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
     ass:append('{\\fs50\\b1}') ---- font-size
@@ -717,6 +717,11 @@ local function calculatePercentage(start,stop,now)
    now = tonumber(unixTimestamp(now))
    return string.format('%0.2f', (now-start)/(stop-start)*100)
 end
+-------------------------------------------------------------------------------
+-- Time Zone shift
+-------------------------------------------------------------------------------
+
+
 
 -------------------------------------------------------------------------------
 -- Try find channel in EPG data table,make formated strings for mpv overlay
