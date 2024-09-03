@@ -658,7 +658,8 @@ end
 local function get_epg_data(force_download)
     if ihas_epg_url then
        for _,url in pairs(list_epg_url) do
-           local filename = url_to_path(url)
+           local filename  = url_to_path(url)
+           local fileshort = filename:match('.+/(.-)$')
            if not check_epg_cache(url) or force_download then
               message(msg_text.download_tv_program..' '..url)
               local data;
@@ -683,12 +684,12 @@ local function get_epg_data(force_download)
                  message(msg_text.failed_get_data_from..' '..url)
               end
            elseif not list_epg_tab[filename] then
-             message(msg_text.load_tv_cache..' '..filename)
+             message(msg_text.load_tv_cache..' '..fileshort)
              local tab = load_epg_cache_from_file(filename)
              if tab then
                 list_epg_tab[filename] = tab
              else
-                message(msg_text.failed_get_data_from..' '..filename)
+                message(msg_text.failed_get_data_from..' '..fileshort)
              end
            end
         end
