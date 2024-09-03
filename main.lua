@@ -486,16 +486,34 @@ local function save_epg_cache_to_file(source_table,output_file,source_url)
          return false
       end
       filehndl:write(config.cacheFileHead..'='..source_url,'\n')
-      local fmts = '%s "%s" %s %s "%s" "%s"\n'
+      local fmts = '%s "%s" %s %s %s "%s" "%s"\n'
       for name,val in pairs(source_table) do
           for _,x in ipairs(val) do
               filehndl:write(fmts:format(name,x.name,x.start,x.stop,
-                                                    x.title,x.desc))
+                                             x.zone,x.title,x.desc))
           end
       end
       filehndl:flush()
       filehndl:close()
       return true
+end
+-------------------------------------------------------------------------------
+-- Extract timezone value
+-------------------------------------------------------------------------------
+local function get_time_zone(timestring)
+   local sign,hour = timestring:match('%d+%s-([+%-])(%d%d)%d%d')
+   if not sign then
+      return 0
+   end
+   if not hour then
+      return 0
+   end
+   if sign == '+' then
+      return tonumber(hour)
+   end
+   if sign == '-' then
+      return -tonumber(hour)
+   end
 end
 -------------------------------------------------------------------------------
 -- Read EPG XML data to table
@@ -568,6 +586,7 @@ local function parse_epg_data(data)
                        start = start:match('(%d+)%s-');  -- del timezone
                         stop = stop:match('(%d+)%s-');   -- del timezone
                         desc = desc:gsub('[\n "]+',' '); -- only oneline
+                        zone = get_time_zone(start);
                     }
                     title   = nil
                     start   = nil
@@ -621,10 +640,10 @@ local function load_epg_cache_from_file(source_file)
         return nil
      end
      local data = nil
-     local fmts = '(.-)%s"(.-)"%s(.-)%s(.-)%s"(.-)"%s"(.-)"$'
+     local fmts = '(.-)%s"(.-)"%s(.-)%s(.-)%s(%d+)%s"(.-)"%s"(.-)"$'
      for line in io.lines(source_file) do
-         local channel,name,start,stop,title,desc = line:match(fmts)
-         if channel and name and start and stop and title and desc then
+         local channel,name,start,stop,zone,title,desc = line:match(fmts)
+         if channel and name and start and stop and zone and title and desc then
             if not data then
                data = { }
             end
@@ -638,6 +657,7 @@ local function load_epg_cache_from_file(source_file)
                 name  = name;
                 stop  = stop;
                 desc  = desc;
+                zone  = zone;
             }
             if data[channel][#data[channel]].name ~= '#' then
                data[data[channel][#data[channel]].name] = data[channel]
@@ -719,12 +739,6 @@ local function calculatePercentage(start,stop,now)
    return string.format('%0.2f', (now-start)/(stop-start)*100)
 end
 -------------------------------------------------------------------------------
--- Time Zone shift
--------------------------------------------------------------------------------
-
-
-
--------------------------------------------------------------------------------
 -- Try find channel in EPG data table,make formated strings for mpv overlay
 -------------------------------------------------------------------------------
 local function get_tv_programm(el,channel)
@@ -743,6 +757,11 @@ local function get_tv_programm(el,channel)
   local tomorrow  = os.date('%Y%m%d',os.time()+24*60*60)
   for _,n in ipairs(el[channel]) do
       local progdate = string.sub(n.start, 1, 8)
+
+
+
+
+
       if progdate == today_short or
          progdate == yesterday   or
          progdate == tomorrow then
