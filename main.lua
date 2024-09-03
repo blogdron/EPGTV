@@ -962,12 +962,12 @@ local function load_all_epg_cache()
        for _,file in pairs(filelist) do
            local fullpath = config.epgTmpDir..'/'..file
            if not list_epg_tab[fullpath] then
-              message(msg_text.load_tv_cache..' '..fullpath)
+              message(msg_text.load_tv_cache..' '..file)
               local tab = load_epg_cache_from_file(fullpath)
               if tab then
                  list_epg_tab[fullpath] = tab
               else
-                message(msg_text.skip..' '..fullpath)
+                message(msg_text.skip..' '..file)
               end
            else
                message(msg_text.cache_allready_loaded)
