@@ -205,7 +205,7 @@ local function progressBar(percent)
     ass:draw_start() --------------
     ass:rect_cw(1, 19, p, 11) -----
     ass:draw_stop() ---------------
-
+    --[[
     ass:new_event() --------------- clock background
     ass:pos(w-128, 21) ------------
     ass:append('{\\bord2}') ------- border size
@@ -216,7 +216,7 @@ local function progressBar(percent)
     ass:draw_start()---------------
     ass:round_rect_cw(0, 0, 121, 48, 2)
     ass:draw_stop()----------------
-
+    --]]
     ass:new_event() --------------- clock
     ass:pos(w-128, 20) ------------
     ass:append('{\\bord2}') ------- border size
