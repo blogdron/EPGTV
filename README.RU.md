@@ -36,7 +36,7 @@ apt install mpv curl gzip
 git clone https://github.com/blogdron/EPGTV  $HOME/.config/mpv/scripts/EPGTV
 ```
 
-## Обновление 
+## Обновление
 
 ```
 cd $HOME/.config/mpv/scripts/EPGTV && git pull
@@ -64,9 +64,9 @@ $HOME/.cache/EPGTV/
 ## Корректный пример IPTV M3U
 
 ```
-#EXTM3U url-tvg="http://epg.it999.ru/ru2.xml.gz, https://iptvx.one/epg/epg.xml.gz" tvg-shift="+3"
-#EXTINF:-1 tvg-id="pervy" tvg-logo="https://epgx.site/p/pervy.png" group-title="Общественные",Первый (HD ready)
-http://edge4.1internet.tv/dash-live2/streams/1tv-dvr/1tvdash.mpd
+#EXTM3U url-tvg="http://example.com/epg.xml.gz, https://example.com/epg.xml" tvg-shift="+3"
+#EXTINF:-1 tvg-id="channel_id"  group-title="Группа телеканала",Имя телеканала
+http://example.com/tvstream
 ```
 
 Для получения ТВ иформации, `M3U`  плейлист должен иметь

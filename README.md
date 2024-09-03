@@ -63,9 +63,9 @@ $HOME/.cache/EPGTV/
 ## Correct IPTV M3U example
 
 ```
-#EXTM3U url-tvg="http://epg.it999.ru/ru2.xml.gz, https://iptvx.one/epg/epg.xml.gz" tvg-shift="+3"
-#EXTINF:-1 tvg-id="pervy" tvg-logo="https://epgx.site/p/pervy.png" group-title="Общественные",Первый (HD ready)
-http://edge4.1internet.tv/dash-live2/streams/1tv-dvr/1tvdash.mpd
+#EXTM3U url-tvg="http://example.com/epg.xml.gz, https://example.com/epg.xml" tvg-shift="+3"
+#EXTINF:-1 tvg-id="channel_id"  group-title="Group name",channel name
+http://example.com/tvstream
 ```
 
 For get and find TV information `M3U` playlist must have
