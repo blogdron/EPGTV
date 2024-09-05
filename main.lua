@@ -119,6 +119,7 @@ local cache_dir = home_dir..'/.cache/EPGTV'
 local config = {
         ignore_tvg_shift = true,  -- dont use additional shift time in EPG
         ignore_time_zone = false, -- if need directly use EPG time as local time
+        ignore_noepg_m3u = true,  -- ignore playlist if M3U not contains EPG link
 
         curlPath  = '/usr/bin/curl',
         zcatPath  = '/usr/bin/zcat',
@@ -864,7 +865,7 @@ end
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
 local function show_epg()
-  if not new_file_is_m3u() or not ihas_epg_url then
+  if not new_file_is_m3u() or (not ihas_epg_url and config.ignore_noepg_m3u) then
      return
   end
   if timer then
