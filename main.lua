@@ -27,6 +27,7 @@ local timer
 -------------------------------------------------------------------------------
 local curr_playlist = nil -- current path for check, this is IPTV m3u or not
 local prev_playlist = nil -- saved previos path for back if curr check failed
+local curr_playlist_time_shift = 0
 -------------------------------------------------------------------------------
 local list_epg_ids = {   }
 local ihas_epg_ids = false
@@ -116,6 +117,9 @@ end
 local cache_dir = home_dir..'/.cache/EPGTV'
 -------------------------------------------------------------------------------
 local config = {
+        ignore_tvg_shift = true,  -- dont use additional shift time in EPG
+        ignore_time_zone = false, -- if need directly use EPG time as local time
+
         curlPath  = '/usr/bin/curl',
         zcatPath  = '/usr/bin/zcat',
         epgTmpDir =  cache_dir,-- epg data cache location for user
@@ -205,7 +209,7 @@ local function progressBar(percent)
     ass:draw_start() --------------
     ass:rect_cw(1, 19, p, 11) -----
     ass:draw_stop() ---------------
-    --[[
+
     ass:new_event() --------------- clock background
     ass:pos(w-128, 21) ------------
     ass:append('{\\bord2}') ------- border size
@@ -216,9 +220,9 @@ local function progressBar(percent)
     ass:draw_start()---------------
     ass:round_rect_cw(0, 0, 121, 48, 2)
     ass:draw_stop()----------------
-    --]]
+
     ass:new_event() --------------- clock
-    ass:pos(w-128, 20) ------------
+    ass:pos(w-117, 20) ------------
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
     ass:append('{\\fs50\\b1}') ---- font-size
@@ -428,6 +432,7 @@ local function get_epg_ids_from_m3u()
 end
 -------------------------------------------------------------------------------
 -- Try find url-tvg links in M3U playlist
+-- Try find tvg-shift time in M3U playlist
 -------------------------------------------------------------------------------
 local function get_epg_url_from_m3u()
    local m3u_data = get_m3u_data()
@@ -443,6 +448,12 @@ local function get_epg_url_from_m3u()
                  list_epg_url[#list_epg_url+1] = url
                  ihas_epg_url = true
              end
+          end
+          local tvg_shift = tonumber(line:match('tvg%-shift="(.-)"'))
+          if tvg_shift then
+             curr_playlist_time_shift = tonumber(tvg_shift)
+          else
+             curr_playlist_time_shift = 0
           end
        end
    end
@@ -657,7 +668,7 @@ local function load_epg_cache_from_file(source_file)
                 name  = name;
                 stop  = stop;
                 desc  = desc;
-                zone  = zone;
+                zone  = tonumber(zone);
             }
             if data[channel][#data[channel]].name ~= '#' then
                data[data[channel][#data[channel]].name] = data[channel]
@@ -739,6 +750,22 @@ local function calculatePercentage(start,stop,now)
    return string.format('%0.2f', (now-start)/(stop-start)*100)
 end
 -------------------------------------------------------------------------------
+local function time_zone_shift(programm_time_zone)
+   local local_time_zone = os.difftime(os.time(), os.time(os.date("!*t")))
+   local_time_zone = math.floor(local_time_zone / 60 / 60)
+   if programm_time_zone > local_time_zone then
+      return -(programm_time_zone - local_time_zone)
+   end
+   if programm_time_zone < local_time_zone then
+      return local_time_zone - programm_time_zone
+   end
+   return 0
+end
+-------------------------------------------------------------------------------
+local function translate_time(prog_time,prog_zone)
+     return unixTimestamp(prog_time) + (time_zone_shift(prog_zone) * 60 * 60)
+end
+-------------------------------------------------------------------------------
 -- Try find channel in EPG data table,make formated strings for mpv overlay
 -------------------------------------------------------------------------------
 local function get_tv_programm(el,channel)
@@ -753,29 +780,34 @@ local function get_tv_programm(el,channel)
   }
   local today_long  = os.date('%Y%m%d%H%M')
   local today_short = string.sub(today_long, 1, 8)
-  local yesterday = os.date('%Y%m%d',os.time()-24*60*60)
-  local tomorrow  = os.date('%Y%m%d',os.time()+24*60*60)
+  local yesterday   = os.date('%Y%m%d',os.time()-24*60*60)
+  local tomorrow    = os.date('%Y%m%d',os.time()+24*60*60)
+  local local_zone  = os.difftime(os.time(), os.time(os.date("!*t"))) / 60 / 60
+  local tvg_shift   = curr_playlist_time_shift
   for _,n in ipairs(el[channel]) do
-      local progdate = string.sub(n.start, 1, 8)
-
-
-
-
-
+      if config.ignore_tvg_shift then
+         tvg_shift = 0
+      end
+      if config.ignore_time_zone then
+         n.zone = local_zone
+      end
+      local tv_zone = n.zone + tvg_shift
+      ---------------------------------------------------------------
+      local progdate  = os.date("%Y%m%d",translate_time(n.start,tv_zone))
       if progdate == today_short or
          progdate == yesterday   or
          progdate == tomorrow then
-         local progstart = string.sub(n.start, 1, 12)
-         local progstop  = string.sub(n.stop, 1, 12)
-         local start = formatTime(n.start)
-         local stop  = formatTime(n.stop)
+         local progstart = os.date("%Y%m%d%H%M",translate_time(n.start,tv_zone))
+         local progstop  = os.date("%Y%m%d%H%M",translate_time(n.stop, tv_zone))
+         local start = formatTime(progstart)
+         local stop  = formatTime(progstop)
         if progstart<=today_long and progstop>=today_long then
            local progress = calculatePercentage(progstart,progstop,today_long)
-           local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%)\\N'
+           local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
            -- set current channel programme
            now.title = fmts:format(config.titleSize,
                                    config.titleColor,n.title,
-                                   config.progressSize,progress)
+                                   config.progressSize,progress,start,stop)
            -- show progress bar
            progressBar(progress)
            -- inject programm description beetwen title and upcoming programms
@@ -796,7 +828,6 @@ local function get_tv_programm(el,channel)
            else
               program[#program+1] = prog
            end
-
         end
      end
   end
@@ -1025,4 +1056,4 @@ mp.register_event('start-file',function()
     ov:remove();
     mp.set_osd_ass(0, 0, '');
 end)
--------------------------------------------------------------------------------
+
