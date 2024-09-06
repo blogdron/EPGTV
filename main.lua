@@ -833,7 +833,8 @@ local function get_tv_programm(el,channel)
      end
   end
   table.sort(program)
-  table.insert(program,1,now.title)
+  table.insert(program,"") -- this empty element for correct scroll down
+  table.insert(program,2,now.title) -- first empty element, next curr program
   for _,prog in ipairs(program_next_day) do
   table.insert(program,prog)
   end
