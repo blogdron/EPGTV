@@ -138,6 +138,19 @@ upcomingTitleSize = '35', -- upcoming broadcast title font size
     cacheFileHead = 'EPGTV-CACHE'
 }
 -------------------------------------------------------------------------------
+-- Force create directory for cache
+-- If Failed exit from script
+-------------------------------------------------------------------------------
+local stat = utils.subprocess({
+      cancellable    = false,
+      capture_stdout = false,
+      args = {'/usr/bin/mkdir','-p',config.epgTmpDir }
+})
+if stat.status ~= 0 then
+   message(msg_text.failed_create_dir..' '..config.epgTmpDir)
+   return
+end
+-------------------------------------------------------------------------------
 -- Show information message in overlay UI and terminal
 -------------------------------------------------------------------------------
 local function message(msg)
@@ -231,19 +244,6 @@ local function progressBar(percent)
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
   end
-end
--------------------------------------------------------------------------------
--- Force create directory for cache
--- If Failed exit from script
--------------------------------------------------------------------------------
-local stat = utils.subprocess({
-      cancellable    = false,
-      capture_stdout = false,
-      args = {'/usr/bin/mkdir','-p',config.epgTmpDir }
-})
-if stat.status ~= 0 then
-   message(msg_text.failed_create_dir..' '..config.epgTmpDir)
-   return
 end
 -------------------------------------------------------------------------------
 -- Utilite for download data to file
@@ -345,48 +345,47 @@ local function download_to_data(source_url,range_start,range_final)
       return data.stdout
 end
 -------------------------------------------------------------------------------
--- Stupid check, current file in mpv opened is playlist file
--- no use playlist-path and not use playlist properties becouse
--- if mpv give URL source without extension we dont know
--- this input data is m3u or not, this is strange but, well okey...
+-- Stupid check, current file in mpv opened is playlist m3u file
 -------------------------------------------------------------------------------
 local function new_file_is_m3u()
-      local path = curr_playlist
-      if not path then
-         return false
-      end
-      local data
-      if path:sub(1,4) == 'http' then
-         data = download_to_data(path,0,1024)
-      else
-         data = load_file_to_data(path,0,1024)
-      end
-      if not data then
-         return false
-      end
-      if data:find('#EXTINF') or data:find('#EXTM3U') then
-         return true
-      end
+   local path = curr_playlist
+   if not path then
       return false
+   end
+   local data
+   if path:sub(1,4) == 'http' then
+      data = download_to_data(path,0,1024)
+   else
+      data = load_file_to_data(path,0,1024)
+   end
+   if not data then
+      return false
+   end
+   if data:find('#EXTINF') and
+      data:find('#EXTM3U') and
+      data:find('url%-tvg') then
+      return true
+   end
+   return false
 end
 -------------------------------------------------------------------------------
 -- Utilite for extract gz archive in memory
 -------------------------------------------------------------------------------
 local function extract_file_to_data(source_file)
-      if not source_file then
-         return nil
-      end
-      local data = utils.subprocess(
-      {
-          capture_size   = 1024*1024*1024,
-          cancellable    = false,
-          capture_stdout = true ,
-          args = { config.zcatPath, source_file }
-      })
-      if data.status ~= 0 then
-         return nil
-      end
-      return data.stdout
+   if not source_file then
+      return nil
+   end
+   local data = utils.subprocess(
+   {
+       capture_size   = 1024*1024*1024,
+       cancellable    = false,
+       capture_stdout = true ,
+       args = { config.zcatPath, source_file }
+   })
+   if data.status ~= 0 then
+      return nil
+   end
+   return data.stdout
 end
 -------------------------------------------------------------------------------
 -- Read current M3U playlist for parse and find tvg-id, url-tvg and titles
@@ -429,7 +428,7 @@ local function get_epg_ids_from_m3u()
           curr_name = nil
        end
    end
-   return ihas_epg_ids or ihas_url_ids --FIXME: refra
+   return ihas_epg_ids or ihas_url_ids
 end
 -------------------------------------------------------------------------------
 -- Try find url-tvg links in M3U playlist
@@ -463,7 +462,7 @@ end
 -------------------------------------------------------------------------------
 -- Convert EPG source url or path to simple string and build path to cache dir
 -------------------------------------------------------------------------------
-local function url_to_path(url)
+local function url_to_cache_path(url)
      return config.epgTmpDir..'/'..url:gsub('[/%.:]+','')
 end
 -------------------------------------------------------------------------------
@@ -473,7 +472,7 @@ local function check_epg_cache(url)
       if not url then
          return false
       end
-      local filename = url_to_path(url)
+      local filename = url_to_cache_path(url)
       local filehndl = io.open(filename)
       if filehndl then
          local head = filehndl:read(#config.cacheFileHead)
@@ -645,7 +644,7 @@ local function parse_epg_data(data)
    return programme
 end
 -------------------------------------------------------------------------------
--- Give EPG programms data from prepared cache file
+-- Get EPG programms data from prepared cache file
 -------------------------------------------------------------------------------
 local function load_epg_cache_from_file(source_file)
      if not source_file then
@@ -690,7 +689,7 @@ end
 local function get_epg_data(force_download)
     if ihas_epg_url then
        for _,url in pairs(list_epg_url) do
-           local filename  = url_to_path(url)
+           local filename  = url_to_cache_path(url)
            local fileshort = filename:match('.+/(.-)$')
            if not check_epg_cache(url) or force_download then
               message(msg_text.download_tv_program..' '..url)
@@ -723,6 +722,8 @@ local function get_epg_data(force_download)
              else
                 message(msg_text.failed_get_data_from..' '..fileshort)
              end
+           else
+                message(msg_text.cache_allready_loaded)
            end
         end
     end
@@ -833,7 +834,7 @@ local function get_tv_programm(el,channel)
      end
   end
   table.sort(program)
-  table.insert(program,"") -- this empty element for correct scroll down
+  table.insert(program,1," ") -- this empty element for correct scroll down
   table.insert(program,2,now.title) -- first empty element, next curr program
   for _,prog in ipairs(program_next_day) do
   table.insert(program,prog)
@@ -844,27 +845,10 @@ local function get_tv_programm(el,channel)
   return program
 end
 -------------------------------------------------------------------------------
--- Scroll TV programs to down
--------------------------------------------------------------------------------
-local current_program_list
-local function next_programms()
-    if not current_program_list then
-       return
-    end
-    if timer then
-       timer:kill()
-       timer = nil
-    end
-    table.remove(current_program_list,1)
-    ov.data = table.concat(current_program_list)
-    ov:update()
-    local w, h = mp.get_osd_size()
-    mp.set_osd_ass(w, h, ass.text)
-end
--------------------------------------------------------------------------------
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
+local current_program_list
 local function show_epg()
   if not new_file_is_m3u() or (not ihas_epg_url and config.ignore_noepg_m3u) then
      return
@@ -929,7 +913,26 @@ local function show_epg()
       mp.set_osd_ass(0, 0, '');
   end)
 end
-
+-------------------------------------------------------------------------------
+-- Scroll TV programs to down
+-------------------------------------------------------------------------------
+local function next_programms()
+    if not current_program_list then
+       return
+    end
+    if #current_program_list == 0 then
+       show_epg()
+    end
+    if timer then
+       timer:kill()
+       timer = nil
+    end
+    table.remove(current_program_list,1)
+    ov.data = table.concat(current_program_list)
+    ov:update()
+    local w, h = mp.get_osd_size()
+    mp.set_osd_ass(w, h, ass.text)
+end
 -------------------------------------------------------------------------------
 -- Get m3u data, find channels tvg-id and url-tvg EPG link, download EPG and
 -- save to cache, if EPG is `gz` archive unpack, XML data once parsing and
@@ -943,6 +946,7 @@ local function load_epg()
        playlist = path
        prev_playlist = curr_playlist
        curr_playlist = path
+
        if not new_file_is_m3u() then
           curr_playlist = prev_playlist
           return
