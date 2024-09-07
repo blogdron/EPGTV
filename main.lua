@@ -980,7 +980,7 @@ local function load_epg()
        curr_playlist = playlist
     end
     if new_file_is_m3u() then
-       --clear_epgtv_state() -- reset all tv information
+       clear_epgtv_state()
        if get_epg_ids_from_m3u() then
           if get_epg_url_from_m3u() then
              get_epg_data()
