@@ -138,19 +138,6 @@ upcomingTitleSize = '35', -- upcoming broadcast title font size
     cacheFileHead = 'EPGTV-CACHE'
 }
 -------------------------------------------------------------------------------
--- Force create directory for cache
--- If Failed exit from script
--------------------------------------------------------------------------------
-local stat = utils.subprocess({
-      cancellable    = false,
-      capture_stdout = false,
-      args = {'/usr/bin/mkdir','-p',config.epgTmpDir }
-})
-if stat.status ~= 0 then
-   message(msg_text.failed_create_dir..' '..config.epgTmpDir)
-   return
-end
--------------------------------------------------------------------------------
 -- Show information message in overlay UI and terminal
 -------------------------------------------------------------------------------
 local function message(msg)
@@ -183,6 +170,19 @@ local function message(msg)
        mp.set_osd_ass(0, 0, ass.text)
        ass.text = ''
     end
+end
+-------------------------------------------------------------------------------
+-- Force create directory for cache
+-- If Failed exit from script
+-------------------------------------------------------------------------------
+local stat = utils.subprocess({
+      cancellable    = false,
+      capture_stdout = false,
+      args = {'/usr/bin/mkdir','-p',config.epgTmpDir }
+})
+if stat.status ~= 0 then
+   message(msg_text.failed_create_dir..' '..config.epgTmpDir)
+   return
 end
 -------------------------------------------------------------------------------
 -- Show progress bar and actual system time
@@ -937,47 +937,16 @@ end
 -- save to cache, if EPG is `gz` archive unpack, XML data once parsing and
 -- save as plain text to cache, if cache data found, load cache data
 -------------------------------------------------------------------------------
-local tmp_list = config.epgTmpDir..'/lastlist.m3u'
 local function load_epg()
-    local path = mp.get_property('path')
     local playlist = mp.get_property('playlist-path')
     if not playlist then
-       playlist = path
-       prev_playlist = curr_playlist
-       curr_playlist = path
-
-       if not new_file_is_m3u() then
-          curr_playlist = prev_playlist
-          return
-       end
-       if playlist:sub(1,4) == 'http' then
-          download_to_file(playlist,tmp_list)
-          mp.commandv('loadfile',tmp_list)
-       else
-          local data = download_to_data(playlist)
-          local filehndl = io.open(tmp_list,'w')
-          if not data or not filehndl then
-             curr_playlist = prev_playlist
-             return
-          end
-          filehndl:write(data)
-          filehndl:flush()
-          filehndl:close()
-          mp.commandv('loadfile',tmp_list)
-       end
-    end
-
-    if playlist == curr_playlist and playlist ~= tmp_list then
        return
     end
-
-    if not curr_playlist then
-       curr_playlist = playlist
-       prev_playlist = curr_playlist
-    else
-       prev_playlist = curr_playlist
-       curr_playlist = playlist
+    if playlist == curr_playlist then
+       return
     end
+    prev_playlist = curr_playlist
+    curr_playlist = playlist
     if new_file_is_m3u() then
        clear_epgtv_state()
        if get_epg_ids_from_m3u() then
