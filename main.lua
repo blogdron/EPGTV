@@ -26,7 +26,6 @@ local ass = assdraw.ass_new()
 local timer
 -------------------------------------------------------------------------------
 local curr_playlist = nil -- current path for check, this is IPTV m3u or not
-local prev_playlist = nil -- saved previos path for back if curr check failed
 local curr_playlist_time_shift = 0
 -------------------------------------------------------------------------------
 local list_epg_ids = {   }
@@ -359,6 +358,7 @@ local function new_file_is_m3u()
       data = load_file_to_data(path,0,1024)
    end
    if not data then
+
       return false
    end
    if data:find('#EXTINF') and
@@ -849,7 +849,10 @@ end
 -------------------------------------------------------------------------------
 local current_program_list
 local function show_epg()
-  if not new_file_is_m3u() or (not ihas_epg_url and config.ignore_noepg_m3u) then
+  if not new_file_is_m3u() then
+     return
+  end
+  if not ihas_epg_url and config.ignore_noepg_m3u then
      return
   end
   if timer then
@@ -945,21 +948,14 @@ local function load_epg()
     if playlist == curr_playlist then
        return
     end
-    prev_playlist = curr_playlist
     curr_playlist = playlist
     if new_file_is_m3u() then
        clear_epgtv_state()
        if get_epg_ids_from_m3u() then
           if get_epg_url_from_m3u() then
              get_epg_data()
-          else
-             curr_playlist = prev_playlist
           end
-       else
-          curr_playlist = prev_playlist
        end
-    else
-       curr_playlist = prev_playlist
     end
     show_epg()
 end
