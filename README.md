@@ -13,6 +13,8 @@ After save cache, show TV program information for twoo days if available.
 If available `EPGTV` show TV programs descriptions. First start can be slowly
 becouse cache not prepared, other starts faster and reuse cache.
 
+  * Worked on `mpv 0.38.0`
+
 ## Alternative
 
 * https://codeberg.org/liya/yuki-iptv
