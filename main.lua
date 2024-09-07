@@ -239,7 +239,7 @@ local function progressBar(percent)
     ass:pos(w-117, 20) ------------
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
-    ass:append('{\\fs50\\b1}') ---- font-size
+    ass:append('{\\fs50\\b0}') ---- font-size
     ass:append('{\\1c&00FBFE&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
