@@ -27,6 +27,9 @@ local timer
 -------------------------------------------------------------------------------
 local curr_playlist = nil -- current path for check, this is IPTV m3u or not
 local curr_playlist_time_shift = 0
+local curr_program_list  = nil
+local curr_program_start = 0
+local curr_program_stop  = 0
 -------------------------------------------------------------------------------
 local list_epg_ids = {   }
 local ihas_epg_ids = false
@@ -184,13 +187,37 @@ if stat.status ~= 0 then
    return
 end
 -------------------------------------------------------------------------------
+-- Convert YYYYMMDDHHmm string to unix timestamp
+-------------------------------------------------------------------------------
+local function unixTimestamp(s)
+   local fmt = '(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)'
+   local year,month,day,hour,min=s:match(fmt)
+   return os.time({day=day,month=month,year=year,hour=hour,min=min})
+end
+-------------------------------------------------------------------------------
+-- Calculate tv show progress in percents
+-------------------------------------------------------------------------------
+local function calculatePercentage(start,stop,now)
+   start = tonumber(unixTimestamp(start))
+   stop = tonumber(unixTimestamp(stop))
+   now = tonumber(unixTimestamp(now))
+   return string.format('%0.2f', (now-start)/(stop-start)*100)
+end
+-------------------------------------------------------------------------------
 -- Show progress bar and actual system time
 -------------------------------------------------------------------------------
-local function progressBar(percent)
+local function progressBar()
   ass = assdraw.ass_new()
+  if curr_program_start == 0 or curr_program_stop == 0 then
+     return
+  end
+  local progstart  = curr_program_start
+  local progstop   = curr_program_stop
+  local today_long = os.date('%Y%m%d%H%M')
+  local percent = calculatePercentage(progstart,progstop,today_long)
   local w, h = mp.get_osd_size()
   local p = ((w-14)/100)*percent
-  if w and w > 0 and h and h > 0 then
+  if w and w > 0  then
     ass:new_event() --------------- darkness background
     ass:pos(0, 0) ----------------- darkness background pose
     ass:append('{\\bord2}') ------- border size
@@ -734,23 +761,8 @@ end
 local function formatTime(time)
     return string.sub(time, 9, 12):gsub(('.'):rep(2),'%1:'):sub(1,-2)
 end
--------------------------------------------------------------------------------
--- Convert YYYYMMDDHHmm string to unix timestamp
--------------------------------------------------------------------------------
-local function unixTimestamp(s)
-   local fmt = '(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)'
-   local year,month,day,hour,min=s:match(fmt)
-   return os.time({day=day,month=month,year=year,hour=hour,min=min})
-end
--------------------------------------------------------------------------------
--- Calculate tv show progress in percents
--------------------------------------------------------------------------------
-local function calculatePercentage(start,stop,now)
-   start = tonumber(unixTimestamp(start))
-   stop = tonumber(unixTimestamp(stop))
-   now = tonumber(unixTimestamp(now))
-   return string.format('%0.2f', (now-start)/(stop-start)*100)
-end
+
+
 -------------------------------------------------------------------------------
 local function time_zone_shift(programm_time_zone)
    local local_time_zone = os.difftime(os.time(), os.time(os.date("!*t")))
@@ -804,14 +816,14 @@ local function get_tv_programm(el,channel)
          local start = formatTime(progstart)
          local stop  = formatTime(progstop)
         if progstart<=today_long and progstop>=today_long then
+           curr_program_start = progstart
+           curr_program_stop = progstop
            local progress = calculatePercentage(progstart,progstop,today_long)
            local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
            -- set current channel programme
            now.title = fmts:format(config.titleSize,
                                    config.titleColor,n.title,
                                    config.progressSize,progress,start,stop)
-           -- show progress bar
-           progressBar(progress)
            -- inject programm description beetwen title and upcoming programms
            now.title = now.title ..
           '{\\a5\\q0\\bord2\\fs25\\b1\\1c&54E5B2&\\3c&000000&}'..n.desc..'\\N'
@@ -847,7 +859,6 @@ end
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
-local current_program_list
 local function show_epg()
   if not new_file_is_m3u() then
      return
@@ -902,13 +913,15 @@ local function show_epg()
      local fmts = '{\\an8\\fs50\\b1\\1c&H%s}%s'
      ov.data = fmts:format(config.noEpgMsgColor,msg_text.no_have_tv_program)
      ass.text = ''
-     current_program_list = nil
+     curr_program_list = nil
   else
      ov.data = table.concat(data)
-     current_program_list = data
+     curr_program_list = data
+     progressBar()
   end
   ov:update()
   local w, h = mp.get_osd_size()
+  progressBar()
   mp.set_osd_ass(w, h, ass.text)
   timer = mp.add_timeout(config.duration, function()
       ov:remove();
@@ -919,18 +932,18 @@ end
 -- Scroll TV programs to down
 -------------------------------------------------------------------------------
 local function next_programms()
-    if not current_program_list then
+    if not curr_program_list then
        return
     end
-    if #current_program_list == 0 then
+    if #curr_program_list == 0 then
        show_epg()
     end
     if timer then
        timer:kill()
        timer = nil
     end
-    table.remove(current_program_list,1)
-    ov.data = table.concat(current_program_list)
+    table.remove(curr_program_list,1)
+    ov.data = table.concat(curr_program_list)
     ov:update()
     local w, h = mp.get_osd_size()
     mp.set_osd_ass(w, h, ass.text)
@@ -1026,4 +1039,14 @@ mp.register_event('start-file',function()
     ov:remove();
     mp.set_osd_ass(0, 0, '');
 end)
-
+-------------------------------------------------------------------------------
+local wx
+mp.add_periodic_timer(1,function()
+  local ww,hh = mp.get_osd_size()
+  if ww ~= wx  then
+     progressBar()
+     mp.set_osd_ass(ww, hh, ass.text)
+     wx = ww
+  end
+end)
+-------------------------------------------------------------------------------
