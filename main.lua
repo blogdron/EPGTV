@@ -768,8 +768,8 @@ end
 local function formatTime(time)
     return string.sub(time, 9, 12):gsub(('.'):rep(2),'%1:'):sub(1,-2)
 end
-
-
+-------------------------------------------------------------------------------
+-- Get difference beetwen current time zone and program time zone
 -------------------------------------------------------------------------------
 local function time_zone_shift(programm_time_zone)
    local local_time_zone = os.difftime(os.time(), os.time(os.date("!*t")))
@@ -782,6 +782,8 @@ local function time_zone_shift(programm_time_zone)
    end
    return 0
 end
+-------------------------------------------------------------------------------
+-- Convert tv program time to local user time
 -------------------------------------------------------------------------------
 local function translate_time(prog_time,prog_zone)
      return unixTimestamp(prog_time) + (time_zone_shift(prog_zone) * 60 * 60)
