@@ -1035,6 +1035,7 @@ mp.add_key_binding('esc',function()
     end
     ov:remove();
     program_is_visible = false
+    curr_program_list  = {}
     mp.set_osd_ass(0, 0, '');
 end)
 -------------------------------------------------------------------------------
@@ -1080,8 +1081,8 @@ mp.add_periodic_timer(30,function()
          local w,h = mp.get_osd_size()
          local percent = progressBar()
          if curr_program_list[1] then
-            local title,ch = curr_program_list[1]:gsub('(%()(.-)(%%)(%))',
-                                                    '%1'..percent..'%3%4')
+            local title,ch =
+            curr_program_list[1]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
             if ch == 1 then
                curr_program_list[1] = title
                ov.data = table.concat(curr_program_list)
