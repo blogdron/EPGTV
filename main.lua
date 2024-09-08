@@ -211,13 +211,13 @@ local function progressBar()
   ass = assdraw.ass_new()
   if curr_program_start == 0 or
      curr_program_stop  == 0 then
-     return
+     return 0
   end
   local progstart  = curr_program_start
   local progstop   = curr_program_stop
   local today_long = os.date('%Y%m%d%H%M')
-  local percent = tonumber(calculatePercentage(progstart,progstop,today_long))
-  if percent > 100 then
+  local percent = calculatePercentage(progstart,progstop,today_long)
+  if tonumber(percent) > 100 then
      percent = 100
   end
   local w, h = mp.get_osd_size()
@@ -261,20 +261,44 @@ local function progressBar()
     ass:append('{\\shad0}') ------- shadow
     ass:append('{\\1a&80&}') ------ alpha
     ass:append('{\\1c&000000&}') -- background color
-    ass:append('{\\3c&000000&}') -- border color
+    ass:append('{\\3c&00FBFE&}') -- border color
     ass:draw_start()---------------
-    ass:round_rect_cw(0, 0, 121, 48, 2)
+    ass:rect_cw(0, 0, 121, 48, 2)
     ass:draw_stop()----------------
 
     ass:new_event() --------------- clock
     ass:pos(w-117, 20) ------------
+
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
-    ass:append('{\\fs50\\b0}') ---- font-size
+    ass:append('{\\fs50\\b1}') ---- font-size
     ass:append('{\\1c&00FBFE&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
+    --[[
+    ass:new_event() --------------- clock background
+    ass:pos(w-251, 21) ------------
+    ass:append('{\\bord2}') ------- border size
+    ass:append('{\\shad0}') ------- shadow
+    ass:append('{\\1a&80&}') ------ alpha
+    ass:append('{\\1c&000000&}') -- background color
+    ass:append('{\\3c&00FBFE&}') -- border color
+    ass:draw_start()---------------
+    ass:rect_cw(0, 0, 121, 48, 2)
+    ass:draw_stop()----------------
+
+    ass:new_event() --------------- clock
+    ass:pos(w-230, 20) ------------
+    ass:append('{\\bord2}') ------- border size
+    ass:append('{\\shad0}') ------- shadow
+    ass:append('{\\fs50\\b1}') ---- font-size
+    ass:append('{\\1c&00FBFE&}') -- background color
+    ass:append('{\\3c&000000&}') -- border color
+    percent = math.floor(percent)
+    ass:append(('\\h'):rep(4-#(percent..'%'))..percent..'%') --
+    --]]
   end
+  return percent
 end
 -------------------------------------------------------------------------------
 -- Utilite for download data to file
@@ -823,8 +847,9 @@ local function get_tv_programm(el,channel)
         if progstart<=today_long and progstop>=today_long then
            curr_program_start = progstart
            curr_program_stop = progstop
-           local progress = calculatePercentage(progstart,progstop,today_long)
-           local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
+             local progress = calculatePercentage(progstart,progstop,today_long)
+             local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
+           --local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s} (%s - %s)\\N'
            -- set current channel programme
            now.title = fmts:format(config.titleSize,
                                    config.titleColor,n.title,
@@ -953,6 +978,7 @@ local function next_programms()
     table.remove(curr_program_list,1)
     ov.data = table.concat(curr_program_list)
     ov:update()
+    progressBar()
     local w, h = mp.get_osd_size()
     mp.set_osd_ass(w, h, ass.text)
     program_is_visible = true
@@ -1061,7 +1087,7 @@ mp.add_periodic_timer(1,function()
   end
 end)
 -------------------------------------------------------------------------------
-mp.add_periodic_timer(30,function()
+mp.add_periodic_timer(1,function()
    if program_is_visible then
       local today_long = os.date('%Y%m%d%H%M')
       if today_long > curr_program_stop and curr_program_stop ~= 0 then
@@ -1074,7 +1100,16 @@ mp.add_periodic_timer(30,function()
          end
       else
          local w,h = mp.get_osd_size()
-         progressBar()
+         local percent = progressBar()
+         if curr_program_list[1] then
+            local title,ch = curr_program_list[1]:gsub('(%()(.-)(%%)(%))',
+                                                    '%1'..percent..'%3%4')
+            if ch == 1 then
+               curr_program_list[1] = title
+               ov.data = table.concat(curr_program_list)
+               ov:update()
+            end
+         end
          mp.set_osd_ass(w, h, ass.text)
       end
    end
