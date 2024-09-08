@@ -1026,7 +1026,7 @@ local function load_all_epg_cache()
     show_epg()
 end
 -------------------------------------------------------------------------------
--- Set key bindings and events handlers
+-- Set key bindings
 -------------------------------------------------------------------------------
 mp.add_key_binding('esc',function()
     if timer then
@@ -1038,13 +1038,18 @@ mp.add_key_binding('esc',function()
     curr_program_list  = {}
     mp.set_osd_ass(0, 0, '');
 end)
--------------------------------------------------------------------------------
 mp.add_key_binding('h', show_epg)
 mp.add_key_binding('n', next_programms)
 mp.add_key_binding('g', load_all_epg_cache)
 mp.add_key_binding('u', update_current_epg)
+-------------------------------------------------------------------------------
+-- Check all loaded files if is IPTV M3U playlist, load him and handle, if not
+-- reset all tv information and ignore, if again IPTV M3U playlist load again
+-------------------------------------------------------------------------------
 mp.register_event('file-loaded', load_epg)
 mp.register_event('file-loaded', show_epg)
+-------------------------------------------------------------------------------
+-- If selected every source or playlist source hide all visual
 -------------------------------------------------------------------------------
 mp.register_event('start-file',function()
     if timer then
@@ -1052,9 +1057,12 @@ mp.register_event('start-file',function()
        timer = nil
     end
     program_is_visible = false
+    curr_program_list  = {   }
     ov:remove();
     mp.set_osd_ass(0, 0, '');
 end)
+-------------------------------------------------------------------------------
+-- If window size changed resize progress bar and clock
 -------------------------------------------------------------------------------
 local wx
 mp.add_periodic_timer(1,function()
@@ -1065,6 +1073,8 @@ mp.add_periodic_timer(1,function()
      wx = ww
   end
 end)
+-------------------------------------------------------------------------------
+-- If tv program visible update clock, progress bar and percent value for title
 -------------------------------------------------------------------------------
 mp.add_periodic_timer(30,function()
    if program_is_visible then
@@ -1080,6 +1090,9 @@ mp.add_periodic_timer(30,function()
       else
          local w,h = mp.get_osd_size()
          local percent = progressBar()
+         -- if on top current tv title
+         -- update percent number value
+         -- and refresh program tv list
          if curr_program_list[1] then
             local title,ch =
             curr_program_list[1]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
@@ -1093,16 +1106,4 @@ mp.add_periodic_timer(30,function()
       end
    end
 end)
--------------------------------------------------------------------------------
--- TODO: Need add update by timer percents of tv program like update clock
---       and progress bar.
--------------------------------------------------------------------------------
--- Variants:
---
--- * seperate current tv program and upcoming program list, and update by
---   timer percent for current program, after concat current program with
---   upcoming tv program list
---
--- * Move percent value from current tv program title to maybe clock location
---   and update independed witch clock and bar
 -------------------------------------------------------------------------------
