@@ -30,6 +30,7 @@ local curr_playlist_time_shift = 0
 local curr_program_list  = nil
 local curr_program_start = 0
 local curr_program_stop  = 0
+local program_is_visible = false
 -------------------------------------------------------------------------------
 local list_epg_ids = {   }
 local ihas_epg_ids = false
@@ -208,13 +209,17 @@ end
 -------------------------------------------------------------------------------
 local function progressBar()
   ass = assdraw.ass_new()
-  if curr_program_start == 0 or curr_program_stop == 0 then
+  if curr_program_start == 0 or
+     curr_program_stop  == 0 then
      return
   end
   local progstart  = curr_program_start
   local progstop   = curr_program_stop
   local today_long = os.date('%Y%m%d%H%M')
   local percent = calculatePercentage(progstart,progstop,today_long)
+  if percent > 100 then
+     percent = 100
+  end
   local w, h = mp.get_osd_size()
   local p = ((w-14)/100)*percent
   if w and w > 0  then
@@ -914,10 +919,12 @@ local function show_epg()
      ov.data = fmts:format(config.noEpgMsgColor,msg_text.no_have_tv_program)
      ass.text = ''
      curr_program_list = nil
+     program_is_visible = false
   else
      ov.data = table.concat(data)
      curr_program_list = data
      progressBar()
+     program_is_visible = true
   end
   ov:update()
   local w, h = mp.get_osd_size()
@@ -925,6 +932,7 @@ local function show_epg()
   mp.set_osd_ass(w, h, ass.text)
   timer = mp.add_timeout(config.duration, function()
       ov:remove();
+      program_is_visible = false
       mp.set_osd_ass(0, 0, '');
   end)
 end
@@ -947,6 +955,7 @@ local function next_programms()
     ov:update()
     local w, h = mp.get_osd_size()
     mp.set_osd_ass(w, h, ass.text)
+    program_is_visible = true
 end
 -------------------------------------------------------------------------------
 -- Get m3u data, find channels tvg-id and url-tvg EPG link, download EPG and
@@ -1021,6 +1030,7 @@ mp.add_key_binding('esc',function()
        timer = nil
     end
     ov:remove();
+    program_is_visible = false
     mp.set_osd_ass(0, 0, '');
 end)
 -------------------------------------------------------------------------------
@@ -1036,6 +1046,7 @@ mp.register_event('start-file',function()
        timer:kill()
        timer = nil
     end
+    program_is_visible = false
     ov:remove();
     mp.set_osd_ass(0, 0, '');
 end)
@@ -1043,10 +1054,17 @@ end)
 local wx
 mp.add_periodic_timer(1,function()
   local ww,hh = mp.get_osd_size()
-  if ww ~= wx  then
+  if ww ~= wx and program_is_visible  then
      progressBar()
      mp.set_osd_ass(ww, hh, ass.text)
      wx = ww
   end
 end)
 -------------------------------------------------------------------------------
+mp.add_periodic_timer(30,function()
+   if program_is_visible then
+      local w,h = mp.get_osd_size()
+      progressBar()
+      mp.set_osd_ass(w, h, ass.text)
+   end
+end)
