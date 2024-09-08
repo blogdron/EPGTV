@@ -825,9 +825,8 @@ local function get_tv_programm(el,channel)
         if progstart<=today_long and progstop>=today_long then
            curr_program_start = progstart
            curr_program_stop = progstop
-             local progress = calculatePercentage(progstart,progstop,today_long)
-             local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
-           --local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s} (%s - %s)\\N'
+           local progress = calculatePercentage(progstart,progstop,today_long)
+           local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
            -- set current channel programme
            now.title = fmts:format(config.titleSize,
                                    config.titleColor,n.title,
