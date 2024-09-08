@@ -1079,3 +1079,16 @@ mp.add_periodic_timer(30,function()
       end
    end
 end)
+-------------------------------------------------------------------------------
+-- TODO: Need add update by timer percents of tv program like update clock
+--       and progress bar.
+-------------------------------------------------------------------------------
+-- Variants:
+--
+-- * seperate current tv program and upcoming program list, and update by
+--   timer percent for current program, after concat current program with
+--   upcoming tv program list
+--
+-- * Move percent value from current tv program title to maybe clock location
+--   and update independed witch clock and bar
+-------------------------------------------------------------------------------
