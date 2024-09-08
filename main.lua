@@ -216,7 +216,7 @@ local function progressBar()
   local progstart  = curr_program_start
   local progstop   = curr_program_stop
   local today_long = os.date('%Y%m%d%H%M')
-  local percent = calculatePercentage(progstart,progstop,today_long)
+  local percent = tonumber(calculatePercentage(progstart,progstop,today_long))
   if percent > 100 then
      percent = 100
   end
@@ -1063,8 +1063,19 @@ end)
 -------------------------------------------------------------------------------
 mp.add_periodic_timer(30,function()
    if program_is_visible then
-      local w,h = mp.get_osd_size()
-      progressBar()
-      mp.set_osd_ass(w, h, ass.text)
+      local today_long = os.date('%Y%m%d%H%M')
+      if today_long > curr_program_stop and curr_program_stop ~= 0 then
+         if timer then
+            show_epg()
+         else
+            show_epg()
+            timer:kill()
+            timer = nil
+         end
+      else
+         local w,h = mp.get_osd_size()
+         progressBar()
+         mp.set_osd_ass(w, h, ass.text)
+      end
    end
 end)
