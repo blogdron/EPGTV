@@ -261,7 +261,7 @@ local function progressBar()
     ass:append('{\\shad0}') ------- shadow
     ass:append('{\\1a&80&}') ------ alpha
     ass:append('{\\1c&000000&}') -- background color
-    ass:append('{\\3c&00FBFE&}') -- border color
+    ass:append('{\\3c&000000&}') -- border color
     ass:draw_start()---------------
     ass:rect_cw(0, 0, 121, 48, 2)
     ass:draw_stop()----------------
@@ -275,28 +275,6 @@ local function progressBar()
     ass:append('{\\1c&00FBFE&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
-    --[[
-    ass:new_event() --------------- clock background
-    ass:pos(w-251, 21) ------------
-    ass:append('{\\bord2}') ------- border size
-    ass:append('{\\shad0}') ------- shadow
-    ass:append('{\\1a&80&}') ------ alpha
-    ass:append('{\\1c&000000&}') -- background color
-    ass:append('{\\3c&00FBFE&}') -- border color
-    ass:draw_start()---------------
-    ass:rect_cw(0, 0, 121, 48, 2)
-    ass:draw_stop()----------------
-
-    ass:new_event() --------------- clock
-    ass:pos(w-230, 20) ------------
-    ass:append('{\\bord2}') ------- border size
-    ass:append('{\\shad0}') ------- shadow
-    ass:append('{\\fs50\\b1}') ---- font-size
-    ass:append('{\\1c&00FBFE&}') -- background color
-    ass:append('{\\3c&000000&}') -- border color
-    percent = math.floor(percent)
-    ass:append(('\\h'):rep(4-#(percent..'%'))..percent..'%') --
-    --]]
   end
   return percent
 end
@@ -1087,7 +1065,7 @@ mp.add_periodic_timer(1,function()
   end
 end)
 -------------------------------------------------------------------------------
-mp.add_periodic_timer(1,function()
+mp.add_periodic_timer(30,function()
    if program_is_visible then
       local today_long = os.date('%Y%m%d%H%M')
       if today_long > curr_program_stop and curr_program_stop ~= 0 then
