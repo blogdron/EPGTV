@@ -1096,7 +1096,7 @@ mp.add_periodic_timer(30,function()
          if curr_program_list[1] then
             local title,ch =
             curr_program_list[1]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
-            if ch == 1 then
+            if ch == 1 then -- only one replace can be
                curr_program_list[1] = title
                ov.data = table.concat(curr_program_list)
                ov:update()
