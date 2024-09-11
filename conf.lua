@@ -43,7 +43,7 @@ local config =
    -------------------------
    -- upcoming tv program --
    -------------------------
-   upcoming_color       = 'FFFFFF',  -- upcoming list color
+   upcoming_color       = 'FFFFFF',  -- upcoming title color
    upcoming_time_size   = '25',      -- upcoming broadcast time font size
    upcoming_title_size  = '35',      -- upcoming broadcast title font size
    upcoming_description_color = 'C9DBE0', -- this day description color
