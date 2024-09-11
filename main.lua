@@ -82,6 +82,8 @@ local translates =
        cache_allready_loaded = 'Cache allready loaded';
        no_have_cache     = 'No have cache for preload';
        no_have_tv_program= 'No have TV program for this channel';
+       no_have_variable_linux   = "No have 'HOME' envilopment variable (Linux)";
+       no_have_variable_windows = "No have 'LOCALAPPDATA' envilopment variable (Windows)";
 
     };
     ['ru_RU.UTF-8'] =
@@ -104,6 +106,8 @@ local translates =
        cache_allready_loaded = 'Кэш уже загружен';
        no_have_cache     = 'Нет кэша для подгрузки';
        no_have_tv_program= 'Нет ТВ программы для этого канала';
+       no_have_variable_linux   = "Нет переменной окружения 'HOME' (Linux)";
+       no_have_variable_windows = "Нет переменной окружения 'LOCALAPPDATA' (Windows)";
     };
 }
 -------------------------------------------------------------------------------
@@ -111,35 +115,44 @@ local translates =
 -------------------------------------------------------------------------------
 local msg_text = translates[os.getenv('LANG')] or translates['en_US.UTF-8']
 -------------------------------------------------------------------------------
-local home_dir = os.getenv('HOME')
-if not home_dir then
-   mp.set_osd_ass(0, 0, "EPGTV Error: No have 'HOME' envilopment variable");
-   io.write("EPGTV Error: No have 'HOME' envilopment variable","\n");
-   return
-end
-local cache_dir = home_dir..'/.cache/EPGTV'
+-- Common configuration
 -------------------------------------------------------------------------------
-local config = {
-        ignore_tvg_shift = true,  -- dont use additional shift time in EPG
-        ignore_time_zone = false, -- if need directly use EPG time as local time
-        ignore_noepg_m3u = true,  -- ignore playlist if M3U not contains EPG link
-
-        curlPath  = '/usr/bin/curl',
-        zcatPath  = '/usr/bin/zcat',
-        epgTmpDir =  cache_dir,-- epg data cache location for user
-       titleColor = '00FBFE',  -- now playing title color
-       clockColor = '00FBFE',  -- clock color
-    upcomingColor = 'FFFFFF',  -- upcoming list color
-    noEpgMsgColor = '002DD1',  -- no EPG message color
-
-        titleSize = '50', -- now playing title font size
-     progressSize = '40', -- percentual progress font size
- upcomingTimeSize = '25', -- upcoming broadcast time font size
-upcomingTitleSize = '35', -- upcoming broadcast title font size
+local config =
+{
+   -- key binding -------------------------------------------------------------
+   key_update_epg     = 'u',  -- manual upgrade EPG for current playlist
+   key_preload_epg    = 'g',  -- manual load all tv cache and try find channel
+   key_show_program   = 'h',  -- general show tv program information
+   key_scroll_program = 'n',  -- scroll down current tv channel information
+   key_close_program  = 'esc',-- manual close tv information UI
+   -- auto show ---------------------------------------------------------------
+   auto_show_program  = true, -- show tv program of start or if channel changed
+   auto_show_mode     = 1,    -- mode 1 == short tv info, mode 2 == full tv info
+   -- auto close --------------------------------------------------------------
+   auto_close_program = true, -- autoclose tv info by duration time (no scroll)
+   auto_close_duration= 5,    -- seconds to close tv info (key_scroll ignored it)
+   -- time correction ---------------------------------------------------------
+   ignore_tvg_shift   = true, -- dont use additional shift time in EPG
+   ignore_time_zone   = false,-- if need directly use EPG time as local time
+   -- special -----------------------------------------------------------------
+   ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
+   -- system depend configuration ---------------------------------------------
+   curl_path   = '/usr/bin/curl', -- set fullpath to you curl installation
+   zcat_path   = '/usr/bin/zcat', -- set fullpath to you zcat installation
+   -- visual colors and font sizes --------------------------------------------
+        title_color = '00FBFE',  -- now playing title color
+        clock_color = '00FBFE',  -- clock color
+     upcoming_color = 'FFFFFF',  -- upcoming list color
+       no_epg_color = '002DD1',  -- no EPG message color
+         title_size = '50', -- now playing title font size
+      progress_size = '40', -- percentual progress font size
+ upcoming_time_size = '25', -- upcoming broadcast time font size
+upcoming_title_size = '35', -- upcoming broadcast title font size
 
          duration = 5, -- hide EPG after this time, defined in seconds
-    cacheFileHead = 'EPGTV-CACHE'
+    cache_file_head = 'EPGTV-CACHE'
 }
+
 -------------------------------------------------------------------------------
 -- Show information message in overlay UI and terminal
 -------------------------------------------------------------------------------
@@ -178,14 +191,36 @@ end
 -- Force create directory for cache
 -- If Failed exit from script
 -------------------------------------------------------------------------------
-local stat = utils.subprocess({
-      cancellable    = false,
-      capture_stdout = false,
-      args = {'/usr/bin/mkdir','-p',config.epgTmpDir }
-})
-if stat.status ~= 0 then
-   message(msg_text.failed_create_dir..' '..config.epgTmpDir)
+local home_linux_dir = os.getenv('HOME')
+local home_windows_dir = os.getenv('LOCALAPPDATA')
+
+if not home_linux_dir and not home_windows_dir then
+   mp.set_osd_ass(0, 0, msg_text.no_have_variable_linux..'\n'..
+                        msg_text.no_have_variable_windows..'\n');
+   io.write(msg_text.no_have_variable_linux,'\n',
+            msg_text.no_have_variable_windows,'\n');
    return
+end
+
+if home_linux_dir then
+   config.epg_tmp_dir = home_linux_dir..'/.cache/EPGTV'
+   local stat = utils.subprocess({
+         cancellable    = false,
+         capture_stdout = false,
+         args = {'/usr/bin/mkdir','-p',config.epg_tmp_dir }
+   })
+   if stat.status ~= 0 then
+      message(msg_text.failed_create_dir..' '..config.epg_tmp_dir)
+      return
+   end
+elseif home_windows_dir then
+   config.epg_tmp_dir = home_windows_dir..'\\EPGTV'
+   os.execute('mkdir '..config.epg_tmp_dir)
+   local info = utils.file_info(config.epg_tmp_dir)
+   if not info.is_dir then
+      message(msg_text.failed_create_dir..' '..config.epg_tmp_dir)
+      return
+   end
 end
 -------------------------------------------------------------------------------
 -- Convert YYYYMMDDHHmm string to unix timestamp
@@ -287,7 +322,7 @@ local function download_to_file(source_url,output_file,range_start,range_final)
          assert(range_start <= range_final)
          args =
          {
-             config.curlPath,
+             config.curl_path,
              '-L',
              '-s',
              '-r',
@@ -299,7 +334,7 @@ local function download_to_file(source_url,output_file,range_start,range_final)
       else
          args =
          {
-             config.curlPath,
+             config.curl_path,
              '-L',
              '-s',
              source_url,
@@ -349,7 +384,7 @@ local function download_to_data(source_url,range_start,range_final)
          assert(range_start <= range_final)
          args =
          {
-             config.curlPath,
+             config.curl_path,
              '-L',
              '-s',
              '-r',
@@ -359,7 +394,7 @@ local function download_to_data(source_url,range_start,range_final)
       else
          args =
          {
-             config.curlPath,
+             config.curl_path,
              '-L',
              '-s',
              source_url
@@ -414,7 +449,7 @@ local function extract_file_to_data(source_file)
        capture_size   = 1024*1024*1024,
        cancellable    = false,
        capture_stdout = true ,
-       args = { config.zcatPath, source_file }
+       args = { config.zcat_path, source_file }
    })
    if data.status ~= 0 then
       return nil
@@ -497,7 +532,7 @@ end
 -- Convert EPG source url or path to simple string and build path to cache dir
 -------------------------------------------------------------------------------
 local function url_to_cache_path(url)
-     return config.epgTmpDir..'/'..url:gsub('[/%.:]+','')
+    return utils.join_path(config.epg_tmp_dir,url:gsub('[/%.:]+',''))
 end
 -------------------------------------------------------------------------------
 -- Check have cache file for url-tvg link from current M3U playlist
@@ -509,8 +544,8 @@ local function check_epg_cache(url)
       local filename = url_to_cache_path(url)
       local filehndl = io.open(filename)
       if filehndl then
-         local head = filehndl:read(#config.cacheFileHead)
-         if head == config.cacheFileHead then
+         local head = filehndl:read(#config.cache_file_head)
+         if head == config.cache_file_head then
             filehndl:close()
             message(msg_text.found_cache..' '..url..' '..msg_text.skip_download)
             return true
@@ -530,7 +565,7 @@ local function save_epg_cache_to_file(source_table,output_file,source_url)
       if not filehndl then
          return false
       end
-      filehndl:write(config.cacheFileHead..'='..source_url,'\n')
+      filehndl:write(config.cache_file_head..'='..source_url,'\n')
       local fmts = '%s "%s" %s %s %s "%s" "%s"\n'
       for name,val in pairs(source_table) do
           for _,x in ipairs(val) do
@@ -830,9 +865,9 @@ local function get_tv_programm(el,channel)
            local progress = calculatePercentage(progstart,progstop,today_long)
            local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
            -- set current channel programme
-           now.title = fmts:format(config.titleSize,
-                                   config.titleColor,n.title,
-                                   config.progressSize,progress,start,stop)
+           now.title = fmts:format(config.title_size,
+                                   config.title_color,n.title,
+                                   config.progress_size,progress,start,stop)
            -- inject programm description beetwen title and upcoming programms
            now.title = now.title ..
           '{\\a5\\q0\\bord2\\fs25\\b1\\1c&54E5B2&\\3c&000000&}'..n.desc..'\\N'
@@ -840,9 +875,9 @@ local function get_tv_programm(el,channel)
            local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}⦗%s – %s⦘{\\b0\\fs%s} %s'..
                         ' \n {\\1c&Hc9dbe0&\\b0\\bord0\\fs17\\q3} %s\\N'
            -- set upcoming channel programmes
-           local  prog = fmts:format(config.upcomingTimeSize,
-                                     config.upcomingColor,start,stop,
-                                     config.upcomingTitleSize,
+           local  prog = fmts:format(config.upcoming_time_size,
+                                     config.upcoming_color,start,stop,
+                                     config.upcoming_title_size,
                                      n.title,n.desc:gsub('\n',''))
 
            if progdate == tomorrow then
@@ -920,7 +955,7 @@ local function show_epg()
   end
   if not channelID or not data then
      local fmts = '{\\an8\\fs50\\b1\\1c&H%s}%s'
-     ov.data = fmts:format(config.noEpgMsgColor,msg_text.no_have_tv_program)
+     ov.data = fmts:format(config.no_epg_color,msg_text.no_have_tv_program)
      ass.text = ''
      curr_program_list = nil
      program_is_visible = false
@@ -1005,10 +1040,10 @@ end
 -- For find channels use all EPG data from all cached sources
 -------------------------------------------------------------------------------
 local function load_all_epg_cache()
-    local filelist = utils.readdir(config.epgTmpDir,'files')
+    local filelist = utils.readdir(config.epg_tmp_dir,'files')
     if filelist and #filelist > 0 then
        for _,file in pairs(filelist) do
-           local fullpath = config.epgTmpDir..'/'..file
+           local fullpath = utils.join_path(config.epg_tmp_dir,file)
            if not list_epg_tab[fullpath] then
               message(msg_text.load_tv_cache..' '..file)
               local tab = load_epg_cache_from_file(fullpath)
@@ -1078,9 +1113,9 @@ end)
 -- If tv program visible update clock, progress bar and percent value for title
 -------------------------------------------------------------------------------
 mp.add_periodic_timer(30,function()
-   if program_is_visible then
+   if program_is_visible and type(curr_program_stop) == 'string' then
       local today_long = os.date('%Y%m%d%H%M')
-      if today_long > curr_program_stop and curr_program_stop ~= 0 then
+      if today_long > curr_program_stop then
          if timer then
             show_epg()
          else
