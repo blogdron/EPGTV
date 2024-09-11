@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- User configuration file, if you change value yoi override default value
+-- User configuration file, if you change value you override default value
 -- if you delete some key/value for this pair used default value from main.lua
 -------------------------------------------------------------------------------
 local config =
