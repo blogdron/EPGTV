@@ -72,7 +72,8 @@ local config =
    -------------------------
    -- darkness background --
    -------------------------
-   background_opacity = '40', -- allow 20,40,60,80,100 percents opacity
+   background_opacity = '40',    -- allow 20,40,60,80,100 percents opacity
+   background_color   = '000000',-- change background color if you need it
    --------------------------
    --  message no tv info  --
    --------------------------
@@ -292,7 +293,7 @@ local function progressBar()
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
     ass:append('{\\1a&'..config.background_opacity..'&}') ------ alpha
-    ass:append('{\\1c&000000&}') -- background color
+    ass:append('{\\1c&'..config.background_color..'&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:draw_start()---------------
     ass:round_rect_cw(0, 0, w, h, 2)
