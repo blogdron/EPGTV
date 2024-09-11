@@ -58,6 +58,10 @@ cd $HOME/.config/mpv/scripts/EPGTV && git pull
  * `g` -  Preload all EPG TV cache for find TV programs (can be usefull)
  * `esc` - Close TV information
 
+## Configuration
+
+In the script directory there is a configuration file `conf.lua`, configure everything to your taste
+
 ## Notice
 
 EPG TV cache location stored in
