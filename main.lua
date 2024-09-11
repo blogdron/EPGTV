@@ -1228,7 +1228,8 @@ mp.add_periodic_timer(config.update_progress_duration,function()
       else
          local w,h = mp.get_osd_size()
          local percent = progressBar()
-
+         -- first element can be empty, check it
+         -- and take next element with current tv program
          local id = 1
          if curr_program_list[1] and #curr_program_list[1] == 0 then
             id = id + 1
