@@ -1,6 +1,8 @@
 -------------------------------------------------------------------------------
 -- User configuration file, if you change value you override default value
--- if you delete some key/value for this pair used default value from main.lua
+-- if you delete some key+value for this pair used default value from main.lua
+-- This file is optional, you can delete this config, if this config have syntax
+-- error this config be ignored and used default values from main.lua src file
 -------------------------------------------------------------------------------
 local config =
 {
