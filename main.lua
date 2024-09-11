@@ -14,51 +14,73 @@
 -------------------------------------------------------------------------------
 --   libASS subtitle format see: https://aegisub.org/docs/latest/ass_tags/   --
 -------------------------------------------------------------------------------
-local os = require 'os'
-local io = require 'io'
-local mp = require 'mp'
-local string  = require 'string'
-local utils   = require 'mp.utils'
-local assdraw = require 'mp.assdraw'
+local config =
+{
+   -- key binding -------------------------------------------------------------
+   key_update_epg     = 'u',  -- manual upgrade EPG for current playlist
+   key_preload_epg    = 'g',  -- manual load all tv cache and try find channel
+   key_show_program   = 'h',  -- general show tv program information
+   key_scroll_program = 'n',  -- scroll down current tv channel information
+   key_close_program  = 'esc',-- manual close tv information
+   -- auto show ---------------------------------------------------------------
+   auto_show_program  = true, -- show tv program if tv channel changed in mpv
+   auto_show_mode     = 2,    -- mode 1 == manual detail, mode 2 == full detail
+   auto_show_details  = 2,    -- number programs if auto_show_mode == 1
+   -- auto close --------------------------------------------------------------
+   auto_close_program = true, -- autoclose tv program (key_scroll ignored it)
+   auto_close_duration= 5,    -- sec to close tv program (key_scroll ignored it)
+   -- update progress ---------------------------------------------------------
+   update_visual_progress = true,-- enable redraw clock, progress bar / percent
+   update_progress_duration = 5, -- sec to update clock, progress bar / percent
+   -- time correction ---------------------------------------------------------
+   ignore_tvg_shift   = true,  -- dont use additional shift time for EPG
+   ignore_time_zone   = false, -- if need directly use EPG time as local time
+   -- special -----------------------------------------------------------------
+   ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
+   -- system depend configuration ---------------------------------------------
+   curl_path   = '/usr/bin/curl', -- set fullpath to you curl installation
+   zcat_path   = '/usr/bin/zcat', -- set fullpath to you zcat installation
+   ----------------------------------------------------------------------------
+   -- visual/style, colors and font sizes (! use BGR colors, not RGB !)
+   ----------------------------------------------------------------------------
+   -- current tv program  --
+   -------------------------
+   title_color       = '00FBFE', -- now playing title color
+   title_size        = '50',     -- now playing title font size
+   description_color = '54E5B2', -- now playing description_color
+   description_size  = '25',     -- now playing description size
+   progress_size     = '40',     -- percentual progress font size
+   -------------------------
+   -- upcoming tv program --
+   -------------------------
+   upcoming_color       = 'FFFFFF',  -- upcoming list color
+   upcoming_time_size   = '25',      -- upcoming broadcast time font size
+   upcoming_title_size  = '35',      -- upcoming broadcast title font size
+   upcoming_description_color = 'C9DBE0', -- this day description color
+   upcoming_description_size  = '17',     -- this day description size
+   -------------------------
+   -- tomorrow tv program --
+   -------------------------
+   tomorrow_prefix_color = '3643FC', -- next day notice message color
+   tomorrow_prefix_size  = '25',     -- next day notice message size
+   -------------------------
+   --  top bar and clock  --
+   -------------------------
+   clock_color = '00FBFE',        -- clock color on top right side
+   clock_bold  = true,            -- set false if clock outside screen
+   progress_bar_color = '00FBFE', -- progress bar line color
+   -------------------------
+   -- darkness background --
+   -------------------------
+   background_opacity = '40', -- allow 20,40,60,80,100 percents opacity
+   --------------------------
+   --  message no tv info  --
+   --------------------------
+   no_epg_color = '002DD1',   -- no EPG message color
+   no_epg_size  = '25',       -- no EPG message font size
+}
 -------------------------------------------------------------------------------
-local ov  = mp.create_osd_overlay('ass-events')
-local ass = assdraw.ass_new()
-local timer
--------------------------------------------------------------------------------
-local curr_playlist = nil -- current path for check, this is IPTV m3u or not
-local curr_playlist_time_shift = 0
-local curr_program_list  = nil
-local curr_program_start = 0
-local curr_program_stop  = 0
-local program_is_visible = false
--------------------------------------------------------------------------------
-local list_epg_ids = {   }
-local ihas_epg_ids = false
--------------------------
-local list_url_ids = {   }
-local ihas_url_ids = false
---------------------------
-local list_epg_url = {   }
-local ihas_epg_url = false
-local list_epg_tab = {   }
--------------------------------------------------------------------------------
-local function clear_epgtv_state()
-   list_epg_ids = {   }
-   ihas_epg_ids = false
-   list_epg_url = {   }
-   ihas_epg_url = false
-   list_epg_tab = {   }
-   collectgarbage('collect')
-end
--------------------------------------------------------------------------------
--- Load XML parser
--------------------------------------------------------------------------------
-local script_directory = mp.get_script_directory()
-package.path = package.path ..';'.. script_directory..'/slaxml/?.lua'
-local state,SLAXML = pcall(require,'slaxml')
-if not state then
-   error('Failled load SLAXML module, plese install this depend')
-end
+config.cache_file_head = 'EPGTV-CACHE'
 -------------------------------------------------------------------------------
 local translates =
 {
@@ -115,44 +137,51 @@ local translates =
 -------------------------------------------------------------------------------
 local msg_text = translates[os.getenv('LANG')] or translates['en_US.UTF-8']
 -------------------------------------------------------------------------------
--- Common configuration
+local os = require 'os'
+local io = require 'io'
+local mp = require 'mp'
+local string  = require 'string'
+local utils   = require 'mp.utils'
+local assdraw = require 'mp.assdraw'
 -------------------------------------------------------------------------------
-local config =
-{
-   -- key binding -------------------------------------------------------------
-   key_update_epg     = 'u',  -- manual upgrade EPG for current playlist
-   key_preload_epg    = 'g',  -- manual load all tv cache and try find channel
-   key_show_program   = 'h',  -- general show tv program information
-   key_scroll_program = 'n',  -- scroll down current tv channel information
-   key_close_program  = 'esc',-- manual close tv information UI
-   -- auto show ---------------------------------------------------------------
-   auto_show_program  = true, -- show tv program of start or if channel changed
-   auto_show_mode     = 1,    -- mode 1 == short tv info, mode 2 == full tv info
-   -- auto close --------------------------------------------------------------
-   auto_close_program = true, -- autoclose tv info by duration time (no scroll)
-   auto_close_duration= 5,    -- seconds to close tv info (key_scroll ignored it)
-   -- time correction ---------------------------------------------------------
-   ignore_tvg_shift   = true, -- dont use additional shift time in EPG
-   ignore_time_zone   = false,-- if need directly use EPG time as local time
-   -- special -----------------------------------------------------------------
-   ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
-   -- system depend configuration ---------------------------------------------
-   curl_path   = '/usr/bin/curl', -- set fullpath to you curl installation
-   zcat_path   = '/usr/bin/zcat', -- set fullpath to you zcat installation
-   -- visual colors and font sizes --------------------------------------------
-        title_color = '00FBFE',  -- now playing title color
-        clock_color = '00FBFE',  -- clock color
-     upcoming_color = 'FFFFFF',  -- upcoming list color
-       no_epg_color = '002DD1',  -- no EPG message color
-         title_size = '50', -- now playing title font size
-      progress_size = '40', -- percentual progress font size
- upcoming_time_size = '25', -- upcoming broadcast time font size
-upcoming_title_size = '35', -- upcoming broadcast title font size
-
-         duration = 5, -- hide EPG after this time, defined in seconds
-    cache_file_head = 'EPGTV-CACHE'
-}
-
+local ov  = mp.create_osd_overlay('ass-events')
+local ass = assdraw.ass_new()
+local timer
+-------------------------------------------------------------------------------
+local curr_playlist = nil -- current path for check, this is IPTV m3u or not
+local curr_playlist_time_shift = 0
+local curr_program_list  = nil
+local curr_program_start = 0
+local curr_program_stop  = 0
+local program_is_visible = false
+-------------------------------------------------------------------------------
+local list_epg_ids = {   }
+local ihas_epg_ids = false
+-------------------------
+local list_url_ids = {   }
+local ihas_url_ids = false
+--------------------------
+local list_epg_url = {   }
+local ihas_epg_url = false
+local list_epg_tab = {   }
+-------------------------------------------------------------------------------
+local function clear_epgtv_state()
+   list_epg_ids = {   }
+   ihas_epg_ids = false
+   list_epg_url = {   }
+   ihas_epg_url = false
+   list_epg_tab = {   }
+   collectgarbage('collect')
+end
+-------------------------------------------------------------------------------
+-- Load XML parser
+-------------------------------------------------------------------------------
+local script_directory = mp.get_script_directory()
+package.path = package.path ..';'.. script_directory..'/slaxml/?.lua'
+local state,SLAXML = pcall(require,'slaxml')
+if not state then
+   error('Failled load SLAXML module, plese install this depend')
+end
 -------------------------------------------------------------------------------
 -- Show information message in overlay UI and terminal
 -------------------------------------------------------------------------------
@@ -262,7 +291,7 @@ local function progressBar()
     ass:pos(0, 0) ----------------- darkness background pose
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
-    ass:append('{\\1a&40&}') ------ alpha
+    ass:append('{\\1a&'..config.background_opacity..'&}') ------ alpha
     ass:append('{\\1c&000000&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:draw_start()---------------
@@ -284,7 +313,7 @@ local function progressBar()
     ass:append('{\\bord0}') ------- border size
     ass:append('{\\shad0}') ------- shadow
     ass:append('{\\1a&0&}') ------- alpha
-    ass:append('{\\1c&00FBFE&}') -- background color
+    ass:append('{\\1c&'..config.progress_bar_color..'&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:draw_start() --------------
     ass:rect_cw(1, 19, p, 11) -----
@@ -303,11 +332,11 @@ local function progressBar()
 
     ass:new_event() --------------- clock
     ass:pos(w-117, 20) ------------
-
+    local bold = config.clock_bold and 1 or 0
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\shad0}') ------- shadow
-    ass:append('{\\fs50\\b1}') ---- font-size
-    ass:append('{\\1c&00FBFE&}') -- background color
+    ass:append('{\\fs50\\b'..bold..'}') ---- font-size
+    ass:append('{\\1c&'..config.clock_color..'&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
   end
@@ -869,27 +898,37 @@ local function get_tv_programm(el,channel)
                                    config.title_color,n.title,
                                    config.progress_size,progress,start,stop)
            -- inject programm description beetwen title and upcoming programms
-           now.title = now.title ..
-          '{\\a5\\q0\\bord2\\fs25\\b1\\1c&54E5B2&\\3c&000000&}'..n.desc..'\\N'
+          local fmts_description =
+          '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N'
+           now.title = fmts_description:format(now.title,
+                                               config.description_size,
+                                               config.description_color,n.desc)
+
         elseif progstart > today_long  then
            local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}⦗%s – %s⦘{\\b0\\fs%s} %s'..
-                        ' \n {\\1c&Hc9dbe0&\\b0\\bord0\\fs17\\q3} %s\\N'
+                        ' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
            -- set upcoming channel programmes
            local  prog = fmts:format(config.upcoming_time_size,
                                      config.upcoming_color,start,stop,
                                      config.upcoming_title_size,
-                                     n.title,n.desc:gsub('\n',''))
+                                     n.title,
+                                     config.upcoming_description_color,
+                                     config.upcoming_description_size,
+                                     n.desc:gsub('\n',''))
 
            if progdate == tomorrow then
+              local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
               program_next_day[#program_next_day+1] =
-              '{\\b1\\be\\fs25\\1c&H3643cf&}'..msg_text.tomorrow..' '..prog
+              fmts_tomorrow:format(config.tomorrow_prefix_size,
+                                   config.tomorrow_prefix_color,
+                                   msg_text.tomorrow,prog)
            else
               program[#program+1] = prog
            end
         end
      end
   end
-  table.insert(program,1," ") -- this empty element for correct scroll down
+  table.insert(program,1,"") -- this empty element for correct scroll down
   table.insert(program,2,now.title) -- first empty element, next curr program
   for _,prog in ipairs(program_next_day) do
   table.insert(program,prog)
@@ -903,7 +942,7 @@ end
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
-local function show_epg()
+local function show_epg(mode)
   if not new_file_is_m3u() then
      return
   end
@@ -953,14 +992,30 @@ local function show_epg()
         end
     end
   end
+
+  local mode_manual = 1;
+  local mode_auto   = 2;
+  if config.auto_show_details <= 0 then
+     config.auto_show_details  = 1
+  end
+  local detail_level = config.auto_show_details + 1
+
   if not channelID or not data then
-     local fmts = '{\\an8\\fs50\\b1\\1c&H%s}%s'
-     ov.data = fmts:format(config.no_epg_color,msg_text.no_have_tv_program)
+     local fmts = '{\\an8\\fs%s\\b1\\1c&H%s&}%s'
+     ov.data = fmts:format(config.no_epg_size,
+                           config.no_epg_color,
+                           msg_text.no_have_tv_program)
      ass.text = ''
      curr_program_list = nil
      program_is_visible = false
   else
-     ov.data = table.concat(data)
+     if mode == mode_manual then
+        ov.data = table.concat({table.unpack(data,1,detail_level)})
+     elseif mode == mode_auto then
+        ov.data = table.concat(data)
+     else
+        ov.data = table.concat(data)
+     end
      curr_program_list = data
      progressBar()
      program_is_visible = true
@@ -969,11 +1024,13 @@ local function show_epg()
   local w, h = mp.get_osd_size()
   progressBar()
   mp.set_osd_ass(w, h, ass.text)
-  timer = mp.add_timeout(config.duration, function()
-      ov:remove();
-      program_is_visible = false
-      mp.set_osd_ass(0, 0, '');
-  end)
+  if config.auto_close_program then
+     timer = mp.add_timeout(config.auto_close_duration, function()
+         ov:remove();
+         program_is_visible = false
+         mp.set_osd_ass(0, 0, '');
+     end)
+  end
 end
 -------------------------------------------------------------------------------
 -- Scroll TV programs to down
@@ -983,7 +1040,8 @@ local function next_programms()
        return
     end
     if #curr_program_list == 0 then
-       show_epg()
+       local full_detail = 2
+       show_epg(full_detail)
     end
     if timer then
        timer:kill()
@@ -1019,7 +1077,8 @@ local function load_epg()
           end
        end
     end
-    show_epg()
+    local full_detail = 2
+    show_epg(full_detail)
 end
 -------------------------------------------------------------------------------
 -- Force update EPG data for current M3U
@@ -1034,7 +1093,8 @@ local function update_current_epg()
           end
        end
     end
-    show_epg()
+    local full_detail = 2
+    show_epg(full_detail)
 end
 -------------------------------------------------------------------------------
 -- For find channels use all EPG data from all cached sources
@@ -1059,31 +1119,56 @@ local function load_all_epg_cache()
     else
         message(msg_text.no_have_cache)
     end
-    show_epg()
+    local full_detail = 2
+    show_epg(full_detail)
 end
 -------------------------------------------------------------------------------
 -- Set key bindings
 -------------------------------------------------------------------------------
-mp.add_key_binding('esc',function()
-    if timer then
-       timer:kill()
-       timer = nil
-    end
-    ov:remove();
-    program_is_visible = false
-    curr_program_list  = {}
-    mp.set_osd_ass(0, 0, '');
-end)
-mp.add_key_binding('h', show_epg)
-mp.add_key_binding('n', next_programms)
-mp.add_key_binding('g', load_all_epg_cache)
-mp.add_key_binding('u', update_current_epg)
+if config.key_close_program then
+   mp.add_key_binding(config.key_close_program,function()
+       if timer then
+          timer:kill()
+          timer = nil
+       end
+       ov:remove();
+       program_is_visible = false
+       curr_program_list  = {}
+       mp.set_osd_ass(0, 0, '');
+   end)
+end
+---
+if config.key_show_program then
+   mp.add_key_binding(config.key_show_program,function()
+       local full_detail = 2
+       show_epg(full_detail)
+   end)
+end
+---
+if config.key_close_program then
+   mp.add_key_binding(config.key_scroll_program,next_programms)
+end
+---
+if config.key_preload_epg then
+   mp.add_key_binding(config.key_preload_epg,load_all_epg_cache)
+end
+---
+if config.key_update_epg then
+   mp.add_key_binding(config.key_update_epg,update_current_epg)
+end
 -------------------------------------------------------------------------------
 -- Check all loaded files if is IPTV M3U playlist, load him and handle, if not
 -- reset all tv information and ignore, if again IPTV M3U playlist load again
 -------------------------------------------------------------------------------
 mp.register_event('file-loaded', load_epg)
-mp.register_event('file-loaded', show_epg)
+-------------------------------------------------------------------------------
+-- Show or not epg after change channel
+-------------------------------------------------------------------------------
+if config.auto_show_program then
+   mp.register_event('file-loaded',function()
+       show_epg(config.auto_show_mode)
+   end)
+end
 -------------------------------------------------------------------------------
 -- If selected every source or playlist source hide all visual
 -------------------------------------------------------------------------------
@@ -1098,7 +1183,7 @@ mp.register_event('start-file',function()
     mp.set_osd_ass(0, 0, '');
 end)
 -------------------------------------------------------------------------------
--- If window size changed resize progress bar and clock
+-- If window size changed resize progress bar and clock, every 1 ses check it
 -------------------------------------------------------------------------------
 local wx
 mp.add_periodic_timer(1,function()
@@ -1112,28 +1197,35 @@ end)
 -------------------------------------------------------------------------------
 -- If tv program visible update clock, progress bar and percent value for title
 -------------------------------------------------------------------------------
-mp.add_periodic_timer(30,function()
+if config.update_visual_progress then
+mp.add_periodic_timer(config.update_progress_duration,function()
    if program_is_visible and type(curr_program_stop) == 'string' then
       local today_long = os.date('%Y%m%d%H%M')
       if today_long > curr_program_stop then
+         local full_detail = 2
          if timer then
-            show_epg()
+            show_epg(full_detail)
          else
-            show_epg()
+            show_epg(full_detail)
             timer:kill()
             timer = nil
          end
       else
          local w,h = mp.get_osd_size()
          local percent = progressBar()
+
+         local id = 1
+         if curr_program_list[1] and #curr_program_list[1] == 0 then
+            id = id + 1
+         end
          -- if on top current tv title
          -- update percent number value
          -- and refresh program tv list
-         if curr_program_list[1] then
+         if curr_program_list[id] then
             local title,ch =
-            curr_program_list[1]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
+            curr_program_list[id]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
             if ch == 1 then -- only one replace can be
-               curr_program_list[1] = title
+               curr_program_list[id] = title
                ov.data = table.concat(curr_program_list)
                ov:update()
             end
@@ -1142,4 +1234,5 @@ mp.add_periodic_timer(30,function()
       end
    end
 end)
+end
 -------------------------------------------------------------------------------
