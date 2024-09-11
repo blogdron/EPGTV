@@ -83,13 +83,16 @@ local config =
 -------------------------------------------------------------------------------
 -- Overloads default values from external config
 -------------------------------------------------------------------------------
+mp.msg = require('mp.msg')
 local stat, external_conf = pcall(require,'conf')
-if stat then
+if stat and type(external_conf) == 'table' then
    for name,value in pairs(external_conf) do
        if config[name] then
           config[name] = value
        end
    end
+else
+   mp.msg.warn('EPGTV: Ignore external config -> ',external_conf or '')
 end
 -------------------------------------------------------------------------------
 config.cache_file_head = 'EPGTV-CACHE'
@@ -203,7 +206,7 @@ local function message(msg)
        ass.text = ''
        ov:remove();
        mp.set_osd_ass(0, 0, '');
-       io.write('EPGTV: ',msg or '???','\n')
+       mp.msg.info('EPGTV: ',msg or '???')
        ass:new_event() --------------- progress bar background
        ass:pos(0, 0) -----------------
        ass:append('{\\bord2}') ------- border size
@@ -238,8 +241,8 @@ local home_windows_dir = os.getenv('LOCALAPPDATA')
 if not home_linux_dir and not home_windows_dir then
    mp.set_osd_ass(0, 0, msg_text.no_have_variable_linux..'\n'..
                         msg_text.no_have_variable_windows..'\n');
-   io.write(msg_text.no_have_variable_linux,'\n',
-            msg_text.no_have_variable_windows,'\n');
+   mp.msg.error(msg_text.no_have_variable_linux,'\n',
+                msg_text.no_have_variable_windows,'\n');
    return
 end
 
@@ -718,7 +721,7 @@ local function parse_epg_data(data)
               is_programme = false
            end
            if name == 'channel' then
-              io.write(channel_id,' # ',display_name,'\n')
+              mp.msg.info(channel_id,' # ',display_name)
               if channel_id and display_name then
                  channels[channel_id] = display_name
               end
