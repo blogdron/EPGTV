@@ -81,6 +81,17 @@ local config =
    no_epg_size  = '25',       -- no EPG message font size
 }
 -------------------------------------------------------------------------------
+-- Overloads default values from external config
+-------------------------------------------------------------------------------
+local stat, external_conf = pcall(require,'conf')
+if stat then
+   for name,value in pairs(external_conf) do
+       if config[name] then
+          config[name] = value
+       end
+   end
+end
+-------------------------------------------------------------------------------
 config.cache_file_head = 'EPGTV-CACHE'
 -------------------------------------------------------------------------------
 local translates =
