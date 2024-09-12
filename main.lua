@@ -173,6 +173,7 @@ local curr_program_list  = nil
 local curr_program_start = 0
 local curr_program_stop  = 0
 local program_is_visible = false
+local curr_show_mode = 2
 -------------------------------------------------------------------------------
 local list_epg_ids = {   }
 local ihas_epg_ids = false
@@ -1012,8 +1013,8 @@ local function show_epg(mode)
     end
   end
 
-  local mode_manual = 1;
-  local mode_auto   = 2;
+  local mode_manual = 1
+  local mode_auto   = 2
   if config.auto_show_details <= 0 then
      config.auto_show_details  = 1
   end
@@ -1039,6 +1040,7 @@ local function show_epg(mode)
      else
         ov.data = table.concat(data)
      end
+     curr_show_mode = mode
      curr_program_list = data
      progressBar()
      program_is_visible = true
@@ -1100,8 +1102,7 @@ local function load_epg()
           end
        end
     end
-    local full_detail = 2
-    show_epg(full_detail)
+    show_epg(config.auto_show_mode)
 end
 -------------------------------------------------------------------------------
 -- Force update EPG data for current M3U
@@ -1246,11 +1247,27 @@ mp.add_periodic_timer(config.update_progress_duration,function()
          -- update percent number value
          -- and refresh program tv list
          if curr_program_list[id] then
+            local mode_manual = 1
+            local mode_auto   = 2
+            if config.auto_show_details <= 0 then
+               config.auto_show_details  = 1
+            end
+            local detail_level = config.auto_show_details + 1
             local title,ch =
             curr_program_list[id]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
             if ch == 1 then -- only one replace can be
                curr_program_list[id] = title
-               ov.data = table.concat(curr_program_list)
+               if curr_show_mode == mode_manual then
+                  local table_slice =
+                  {
+                      table.unpack(curr_program_list,1,detail_level) -- luacheck: ignore
+                  }
+                  ov.data = table.concat(table_slice)
+               elseif curr_show_mode == mode_auto then
+                  ov.data = table.concat(curr_program_list)
+               else
+                  ov.data = table.concat(curr_program_list)
+               end
                ov:update()
             end
          end
