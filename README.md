@@ -53,6 +53,7 @@ cd $HOME/.config/mpv/scripts/EPGTV && git pull
 `mpv iptv.m3u` or `mpv https://example.com/iptv.m3u`
 
  * `h` -  Show TV information
+ * `y` -  Show TV information like `n` but in toggle mode show/hide
  * `n` -  Scroll down of TV information for today and tomorrow
  * `u` -  Upgrade EPG TV data for current playlist (other cache unloaded)
  * `g` -  Preload all EPG TV cache for find TV programs (can be usefull)
