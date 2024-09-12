@@ -12,8 +12,11 @@ local config =
    key_show_program   = 'h',  -- general show tv program information
    key_scroll_program = 'n',  -- scroll down current tv channel information
    key_close_program  = 'esc',-- manual close tv information
+   -- manual show by update, preload, show, switch (scroll ignore it) ---------
+   manual_show_mode   = 2,    -- mode 1 == manual detail, mode 2 == full detail
+   manual_show_details= 2,    -- number programs if manual_show_mode == 1
    -- auto show ---------------------------------------------------------------
-   auto_show_program  = true, -- show tv program if tv channel changed in mpv
+   auto_show_program  = true, -- show tv program if tv channel opened, changed
    auto_show_mode     = 2,    -- mode 1 == manual detail, mode 2 == full detail
    auto_show_details  = 2,    -- number programs if auto_show_mode == 1
    -- auto close --------------------------------------------------------------

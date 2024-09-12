@@ -22,6 +22,9 @@ local config =
    key_show_program   = 'h',  -- general show tv program information
    key_scroll_program = 'n',  -- scroll down current tv channel information
    key_close_program  = 'esc',-- manual close tv information
+   -- manual show by update, preload, show, switch (scroll ignore it) ---------
+   manual_show_mode   = 2,    -- mode 1 == manual detail, mode 2 == full detail
+   manual_show_details= 2,    -- number programs if manual_show_mode == 1
    -- auto show ---------------------------------------------------------------
    auto_show_program  = true, -- show tv program if tv channel changed in mpv
    auto_show_mode     = 2,    -- mode 1 == manual detail, mode 2 == full detail
@@ -96,6 +99,12 @@ else
 end
 -------------------------------------------------------------------------------
 config.cache_file_head = 'EPGTV-CACHE'
+if config.auto_show_details <= 0 then
+   config.auto_show_details  = 1
+end
+if config.manual_show_details <= 0 then
+   config.manual_show_details  = 1
+end
 -------------------------------------------------------------------------------
 local translates =
 {
@@ -174,6 +183,7 @@ local curr_program_start = 0
 local curr_program_stop  = 0
 local program_is_visible = false
 local curr_show_mode = 2
+local curr_show_type = 'auto'
 -------------------------------------------------------------------------------
 local list_epg_ids = {   }
 local ihas_epg_ids = false
@@ -962,7 +972,7 @@ end
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
 -- if found, we try find TV programms in EPG data, if found, prepare and show
 -------------------------------------------------------------------------------
-local function show_epg(mode)
+local function show_epg(mode,show_type)
   if not new_file_is_m3u() then
      return
   end
@@ -1015,10 +1025,12 @@ local function show_epg(mode)
 
   local mode_manual = 1
   local mode_auto   = 2
-  if config.auto_show_details <= 0 then
-     config.auto_show_details  = 1
+  local detail_level
+  if show_type == 'auto' then
+     detail_level = config.auto_show_details + 1
+  elseif show_type == 'manual' then
+     detail_level = config.manual_show_details + 1
   end
-  local detail_level = config.auto_show_details + 1
 
   if not channelID or not data then
      local fmts = '{\\an8\\fs%s\\b1\\1c&H%s&}%s'
@@ -1041,6 +1053,7 @@ local function show_epg(mode)
         ov.data = table.concat(data)
      end
      curr_show_mode = mode
+     curr_show_type = show_type
      curr_program_list = data
      progressBar()
      program_is_visible = true
@@ -1065,8 +1078,9 @@ local function next_programms()
        return
     end
     if #curr_program_list == 0 then
+       -- force full detail
        local full_detail = 2
-       show_epg(full_detail)
+       show_epg(full_detail,'manual')
     end
     if timer then
        timer:kill()
@@ -1102,7 +1116,7 @@ local function load_epg()
           end
        end
     end
-    show_epg(config.auto_show_mode)
+    show_epg(config.auto_show_mode,'auto')
 end
 -------------------------------------------------------------------------------
 -- Force update EPG data for current M3U
@@ -1117,8 +1131,7 @@ local function update_current_epg()
           end
        end
     end
-    local full_detail = 2
-    show_epg(full_detail)
+    show_epg(config.manual_show_mode,'manual')
 end
 -------------------------------------------------------------------------------
 -- For find channels use all EPG data from all cached sources
@@ -1143,8 +1156,7 @@ local function load_all_epg_cache()
     else
         message(msg_text.no_have_cache)
     end
-    local full_detail = 2
-    show_epg(full_detail)
+    show_epg(config.manual_show_mode,'manual')
 end
 -------------------------------------------------------------------------------
 -- Set key bindings
@@ -1164,8 +1176,7 @@ end
 ---
 if config.key_show_program then
    mp.add_key_binding(config.key_show_program,function()
-       local full_detail = 2
-       show_epg(full_detail)
+       show_epg(config.manual_show_mode,'manual')
    end)
 end
 ---
@@ -1190,7 +1201,7 @@ mp.register_event('file-loaded', load_epg)
 -------------------------------------------------------------------------------
 if config.auto_show_program then
    mp.register_event('file-loaded',function()
-       show_epg(config.auto_show_mode)
+       show_epg(config.auto_show_mode,'auto')
    end)
 end
 -------------------------------------------------------------------------------
@@ -1225,12 +1236,16 @@ if config.update_visual_progress then
 mp.add_periodic_timer(config.update_progress_duration,function()
    if program_is_visible and type(curr_program_stop) == 'string' then
       local today_long = os.date('%Y%m%d%H%M')
-      if today_long > curr_program_stop then
-         local full_detail = 2
-         if timer then
-            show_epg(full_detail)
-         else
-            show_epg(full_detail)
+      if today_long >= curr_program_stop then
+         -- save timer becouse it
+         -- changed in show_epg()
+         local has_timer = timer
+         if curr_show_type == 'auto' then
+            show_epg(config.auto_show_mode,'auto')
+         elseif curr_show_type == 'manual' then
+            show_epg(config.manual_show_mode,'manual')
+         end
+         if not has_timer then
             timer:kill()
             timer = nil
          end
@@ -1249,10 +1264,14 @@ mp.add_periodic_timer(config.update_progress_duration,function()
          if curr_program_list[id] then
             local mode_manual = 1
             local mode_auto   = 2
-            if config.auto_show_details <= 0 then
-               config.auto_show_details  = 1
+
+            local detail_level
+            if curr_show_type == 'auto' then
+               detail_level = config.auto_show_details + 1
+            elseif curr_show_type == 'manual' then
+               detail_level = config.manual_show_details + 1
             end
-            local detail_level = config.auto_show_details + 1
+
             local title,ch =
             curr_program_list[id]:gsub('(%()(.-)(%%)(%))','%1'..percent..'%3%4')
             if ch == 1 then -- only one replace can be
