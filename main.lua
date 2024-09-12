@@ -20,6 +20,7 @@ local config =
    key_update_epg     = 'u',  -- manual upgrade EPG for current playlist
    key_preload_epg    = 'g',  -- manual load all tv cache and try find channel
    key_show_program   = 'h',  -- general show tv program information
+   key_show_toggle    = 'y',  -- works like key_show_program but as switcher
    key_scroll_program = 'n',  -- scroll down current tv channel information
    key_close_program  = 'esc',-- manual close tv information
    -- manual show by update, preload, show, switch (scroll ignore it) ---------
@@ -30,8 +31,8 @@ local config =
    auto_show_mode     = 2,    -- mode 1 == manual detail, mode 2 == full detail
    auto_show_details  = 2,    -- number programs if auto_show_mode == 1
    -- auto close --------------------------------------------------------------
-   auto_close_program = true, -- autoclose tv program (key_scroll ignored it)
-   auto_close_duration= 5,    -- sec to close tv program (key_scroll ignored it)
+   auto_close_program = true, -- autoclose tv program (scroll,toggle ignored it)
+   auto_close_duration= 5,    -- sec to close tv program (scroll,toggle ignored it)
    -- update progress ---------------------------------------------------------
    update_visual_progress = true,-- enable redraw clock, progress bar / percent
    update_progress_duration = 5, -- sec to update clock, progress bar / percent
@@ -1171,6 +1172,30 @@ if config.key_close_program then
        program_is_visible = false
        curr_program_list  = {}
        mp.set_osd_ass(0, 0, '');
+   end)
+end
+---
+local toggle_state = true
+if config.key_show_toggle then
+   mp.add_key_binding(config.key_show_toggle,function()
+       if toggle_state then
+          -- force ignore timer for toggle key
+          show_epg(config.manual_show_mode,'manual')
+          if timer then
+             timer:kill()
+             timer = nil
+          end
+       else
+           if timer then
+              timer:kill()
+              timer = nil
+           end
+           ov:remove();
+           program_is_visible = false
+           curr_program_list  = {}
+           mp.set_osd_ass(0, 0, '');
+       end
+       toggle_state = not toggle_state
    end)
 end
 ---
