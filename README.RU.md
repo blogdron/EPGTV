@@ -48,9 +48,13 @@ git clone https://github.com/blogdron/EPGTV  $HOME/.config/mpv/scripts/EPGTV
 cd $HOME/.config/mpv/scripts/EPGTV && git pull
 ```
 
-## Использование (я рекомендую включать --hwdec для аппаратного ускорения)
+## Использование  
+(я рекомендую включать --hwdec для аппаратного ускорения)
 
-`mpv --hwdec iptv.m3u` или `mpv --hwdec https://example.com/iptv.m3u`
+ * `mpv --hwdec iptv.m3u` 
+ * `mpv --hwdec https://example.com/iptv.m3u`
+
+## Управление
 
  * `h` -  Отобразить программу телепередач
  * `y` -  Отобразить программу телепередач как `n` но в режиме переключателя показать/скрыть

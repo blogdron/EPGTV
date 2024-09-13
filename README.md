@@ -48,9 +48,13 @@ git clone https://github.com/blogdron/EPGTV  $HOME/.config/mpv/scripts/EPGTV
 cd $HOME/.config/mpv/scripts/EPGTV && git pull
 ```
 
-## Usage (I recommend use --hwdec, for hardware acceleration)
+## Usage   
+(I recommend use --hwdec, for hardware acceleration)
 
-`mpv --hwdec iptv.m3u` or `mpv --hwdec https://example.com/iptv.m3u`
+ * `mpv --hwdec iptv.m3u` 
+ * `mpv --hwdec https://example.com/iptv.m3u`
+
+## Control
 
  * `h` -  Show TV information
  * `y` -  Show TV information like `n` but in toggle mode show/hide
