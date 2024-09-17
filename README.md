@@ -63,6 +63,14 @@ cd $HOME/.config/mpv/scripts/EPGTV && git pull
  * `g` -  Preload all EPG TV cache for find TV programs (can be usefull)
  * `esc` - Close TV information
 
+`EPGTV` uses a cache for faster operation, it is automatically created
+when you first access the playlist, but if after a while you see a message
+about the lack of data for the TV channel, then probably the cache is no longer relevant, and
+you need to **update the cache manually** by pressing `u` if the `EPG` data source has been updated
+then the new cache will be relevant and all data will be displayed, usually `EPG` data stores
+information for several days in advance, but this is not always the case.
+
+
 ## Configuration
 
 In the script directory there is a configuration file `conf.lua`, configure everything to your taste
