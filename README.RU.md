@@ -1,9 +1,5 @@
 # EPGTV - Программа телепередач для mpv плеера
 
-```diff
--(В разработке) Только Linux и похожие *NIX системы поддерживаются
-```
-
 ## [README on English language](README.md)
 
 Простое отображение `EPG` информации для `IPTV M3U` плейлистов в [mpv](https://mpv.io).
@@ -100,5 +96,36 @@ http://example.com/tvstream
 Некоторые `IPTV M3U` не имеют `tvg-id`, в этом случае используется другой механизм
 поиска, поис ведётся по названию потока в `M3U` или по окончанию ссылки потока
 
+--------------
+
+### Windows
+
+Я не использую `Windows`, но вот описание где и как мне удалось лишь один раз
+убедится в работоспособности скрипта для операционной системы `Windows 7`.
+
+## Подготовка
+
+* Скачать и распаковать `static-mpv.7zip` в `static-mpv`  (https://www.7-zip.org/)
+ * https://github.com/eko5624/mpv-win64/releases/tag/2024-04-01
+* Скачать и распаковать в `static-mpv\portable-config\scripts\EPGTV`
+  * https://github.com/blogdron/EPGTV/archive/refs/heads/master.zip
+* Скачать и распаковать в `C:\Program Files\curl`
+  * https://curl.se/windows/
+* Скачать и паспаковать в `C:\Program Files\gzip`
+  * https://sourceforge.net/projects/gnuwin32/files/gzip/1.3.12-1/gzip-1.3.12-1-bin.zip/download
+* Открыть файл `static-mpv\portable-config\scripts\EPGTV\conf.lua`
+  * поменять значения `curl_path` и `gzip_path` на такие
+
+```lua
+curl_path = 'C:\\Program Files\\curl\\bin\\curl.exe', -- set fullpath to you curl installation
+gzip_path = 'C:\\Program Files\\gzip\\bin\\gzip.exe', -- set fullpath to you gzip installation
+```
+
+Всё, теперь должно работать, на самом деле я тут описал всё слишком подробно.
+Вам нужно лишь распаложить каталог `EPGTV` с его содержимым в каталоге скрипта
+вашего `mpv` плеера, он может находится в разных местах в зависимости от вашего
+варианта на `Windows` далее, нужно установить `curl` и `gzip` и установить до них
+полные пути в конфигурационном файле `EPGTV` и всё. Эти зависимости вы можете взять
+из других мест, и они могут надодится по другим путям, исходите из вашего случая.
 
 

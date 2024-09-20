@@ -98,3 +98,35 @@ For get and find TV information `M3U` playlist must have
 
 Some `IPTV M3U` no have `tvg-id` in this case, an alternative search mechanism
 is used by name and/or end of the link
+
+------
+
+### Windows
+
+I don't use `Windows`, but here is a description of where and how I managed to
+check the script's functionality for the `Windows 7` operating system only once.
+
+## Preparation
+
+* Download and unpack `static-mpv.7zip` to `static-mpv` (https://www.7-zip.org/)
+* https://github.com/eko5624/mpv-win64/releases/tag/2024-04-01
+* Download and unpack to `static-mpv\portable-config\scripts\EPGTV`
+* https://github.com/blogdron/EPGTV/archive/refs/heads/master.zip
+* Download and unpack to `C:\Program Files\curl`
+* https://curl.se/windows/
+* Download and unpack to `C:\Program Files\gzip`
+* https://sourceforge.net/projects/gnuwin32/files/gzip/1.3.12-1/gzip-1.3.12-1-bin.zip/download
+* Open file `static-mpv\portable-config\scripts\EPGTV\conf.lua`
+* change values of `curl_path` and `gzip_path` to these
+
+```lua
+curl_path = 'C:\\Program Files\\curl\\bin\\curl.exe', -- set fullpath to you curl installation
+gzip_path = 'C:\\Program Files\\gzip\\bin\\gzip.exe', -- set fullpath to you gzip installation
+```
+
+That's it, it should work now, in fact I described everything here in too much detail.
+You only need to unzip the `EPGTV` directory with its contents in the script directory
+of your `mpv` player, it can be in different places depending on your
+version on `Windows` then you need to install `curl` and `gzip` and set the full paths
+to them in the `EPGTV` configuration file and that's it. You can take these dependencies
+from other places, and they may be needed in other ways, based on your case.
