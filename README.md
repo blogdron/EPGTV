@@ -101,7 +101,7 @@ is used by name and/or end of the link
 
 ------
 
-### Windows
+# Windows
 
 I don't use `Windows`, but here is a description of where and how I managed to
 check the script's functionality for the `Windows 7` operating system only once.
