@@ -11,6 +11,8 @@ If available `EPGTV` show TV programs descriptions. First start can be slowly
 becouse cache not prepared, other starts faster and reuse cache.
 
   * Worked on `mpv 0.38.0`
+  * Worked on `GNU/Linux Debian 12`
+  * Worked on `Windows 7` (See Windows specific info in end of README )
 
 ## Alternative
 
