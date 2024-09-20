@@ -43,7 +43,7 @@ local config =
    ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
    -- system depend configuration ---------------------------------------------
    curl_path   = '/usr/bin/curl', -- set fullpath to you curl installation
-   zcat_path   = '/usr/bin/zcat', -- set fullpath to you zcat installation
+   gzip_path   = '/usr/bin/gzip', -- set fullpath to you gzip installation
    ----------------------------------------------------------------------------
    -- visual/style, colors and font sizes (! use BGR colors, not RGB !)
    ----------------------------------------------------------------------------
@@ -509,7 +509,7 @@ local function extract_file_to_data(source_file)
        capture_size   = 1024*1024*1024,
        cancellable    = false,
        capture_stdout = true ,
-       args = { config.zcat_path, source_file }
+       args = { config.gzip_path,'-c','-d', source_file }
    })
    if data.status ~= 0 then
       return nil

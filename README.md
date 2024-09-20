@@ -28,7 +28,7 @@ becouse cache not prepared, other starts faster and reuse cache.
 
  * `mpv`  This script work inside `mpv` player
  * `curl` Need for download `EPG` data
- * `gzip` Need for `zcat` utilite for unpack `zip/gzip` archives
+ * `gzip` Need for unpack `zip/gzip` archives
 
 ```
 apt install mpv curl gzip
