@@ -105,13 +105,13 @@ http://example.com/tvstream
 
 ## Подготовка
 
-* Скачать и распаковать `static-mpv.7zip` в `static-mpv`  (https://www.7-zip.org/)
+* Скачать `mpv`  и распаковать `static-mpv.7zip` в `static-mpv`
  * https://github.com/eko5624/mpv-win64/releases/tag/2024-04-01
-* Скачать и распаковать в `static-mpv\portable-config\scripts\EPGTV`
+* Скачать `EPGTV` и распаковать в `static-mpv\portable-config\scripts\EPGTV`
   * https://github.com/blogdron/EPGTV/archive/refs/heads/master.zip
-* Скачать и распаковать в `C:\Program Files\curl`
+* Скачать `curl` и распаковать в `C:\Program Files\curl`
   * https://curl.se/windows/
-* Скачать и паспаковать в `C:\Program Files\gzip`
+* Скачать `gzip` и паспаковать в `C:\Program Files\gzip`
   * https://sourceforge.net/projects/gnuwin32/files/gzip/1.3.12-1/gzip-1.3.12-1-bin.zip/download
 * Открыть файл `static-mpv\portable-config\scripts\EPGTV\conf.lua`
   * поменять значения `curl_path` и `gzip_path` на такие

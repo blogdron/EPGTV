@@ -108,13 +108,13 @@ check the script's functionality for the `Windows 7` operating system only once.
 
 ## Preparation
 
-* Download and unpack `static-mpv.7zip` to `static-mpv` (https://www.7-zip.org/)
+* Download `mpv` and unpack `static-mpv.7zip` to `static-mpv`
 * https://github.com/eko5624/mpv-win64/releases/tag/2024-04-01
-* Download and unpack to `static-mpv\portable-config\scripts\EPGTV`
+* Download `EPGTV` and unpack to `static-mpv\portable-config\scripts\EPGTV`
 * https://github.com/blogdron/EPGTV/archive/refs/heads/master.zip
-* Download and unpack to `C:\Program Files\curl`
+* Download `curl` and unpack to `C:\Program Files\curl`
 * https://curl.se/windows/
-* Download and unpack to `C:\Program Files\gzip`
+* Download `gzip` and unpack to `C:\Program Files\gzip`
 * https://sourceforge.net/projects/gnuwin32/files/gzip/1.3.12-1/gzip-1.3.12-1-bin.zip/download
 * Open file `static-mpv\portable-config\scripts\EPGTV\conf.lua`
 * change values of `curl_path` and `gzip_path` to these
