@@ -930,7 +930,7 @@ local function get_tv_programm(el,channel)
                                    config.progress_size,progress,start,stop)
            -- inject programm description beetwen title and upcoming programms
           local fmts_description =
-          '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N'
+          '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N\\N'
            now.title = fmts_description:format(now.title,
                                                config.description_size,
                                                config.description_color,n.desc)
