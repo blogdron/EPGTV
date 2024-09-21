@@ -66,7 +66,8 @@ local config =
    -------------------------
    -- darkness background --
    -------------------------
-   background_opacity = '40',    -- allow 20,40,60,80,100 percents opacity
+   background = true,            -- enable/disable background filling
+   background_opacity = '40',    -- allow 10,20,30,40,50,60,70,80,90 opacity
    background_color   = '000000',-- change background color if you need it
    --------------------------
    --  message no tv info  --

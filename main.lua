@@ -76,7 +76,8 @@ local config =
    -------------------------
    -- darkness background --
    -------------------------
-   background_opacity = '40',    -- allow 20,40,60,80,100 percents opacity
+   background = true,            -- enable/disable background filling
+   background_opacity = '40',    -- allow 10,20,20,40,50,60,80,90 opacity
    background_color   = '000000',-- change background color if you need it
    --------------------------
    --  message no tv info  --
@@ -318,6 +319,7 @@ local function progressBar()
   local w, h = mp.get_osd_size()
   local p = ((w-14)/100)*percent
   if w and w > 0  then
+    if config.background then
     ass:new_event() --------------- darkness background
     ass:pos(0, 0) ----------------- darkness background pose
     ass:append('{\\bord2}') ------- border size
@@ -328,7 +330,7 @@ local function progressBar()
     ass:draw_start()---------------
     ass:round_rect_cw(0, 0, w, h, 2)
     ass:draw_stop() ---------------
-
+    end
     ass:new_event() --------------- progress bar background
     ass:append('{\\bord2}') ------- border size
     ass:append('{\\1c&000000&}') -- background color
