@@ -1059,10 +1059,10 @@ local function show_epg(mode,show_type)
      progressBar()
      program_is_visible = true
   end
-  ov:update()
   local w, h = mp.get_osd_size()
   progressBar()
   mp.set_osd_ass(w, h, ass.text)
+  ov:update()
   if config.auto_close_program then
      timer = mp.add_timeout(config.auto_close_duration, function()
          ov:remove();
@@ -1089,10 +1089,10 @@ local function next_programms()
     end
     table.remove(curr_program_list,1)
     ov.data = table.concat(curr_program_list)
-    ov:update()
     progressBar()
     local w, h = mp.get_osd_size()
     mp.set_osd_ass(w, h, ass.text)
+    ov:update()
     program_is_visible = true
 end
 -------------------------------------------------------------------------------
