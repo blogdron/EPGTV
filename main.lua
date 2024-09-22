@@ -37,8 +37,9 @@ local config =
    update_visual_progress = true,-- enable redraw clock, progress bar / percent
    update_progress_duration = 5, -- sec to update clock, progress bar / percent
    -- time correction ---------------------------------------------------------
-   ignore_tvg_shift   = true,  -- dont use additional shift time for EPG
-   ignore_time_zone   = false, -- if need directly use EPG time as local time
+   force_time_shift   = 0,     -- you time shift in hours, for example: 4 or -4
+   ignore_tvg_shift   = true,  -- dont use additional shift time for EPG (in m3u data)
+   ignore_time_zone   = false, -- if need directly use EPG time as local time (in epg data)
    -- special -----------------------------------------------------------------
    ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
    -- system depend configuration ---------------------------------------------
@@ -913,7 +914,7 @@ local function get_tv_programm(el,channel)
       if config.ignore_time_zone then
          n.zone = local_zone
       end
-      local tv_zone = n.zone + tvg_shift
+      local tv_zone = (n.zone + tvg_shift) + config.force_time_shift
       ---------------------------------------------------------------
       local progdate  = os.date("%Y%m%d",translate_time(n.start,tv_zone))
       if progdate == today_short or
