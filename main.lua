@@ -70,6 +70,7 @@ local config =
    -------------------------
    --  top bar and clock  --
    -------------------------
+   clock = true,                  -- enable/disable clock on top right
    clock_color = '00FBFE',        -- clock color on top right side
    clock_bold  = true,            -- set false if clock outside screen
    progress_bar_color = '00FBFE', -- progress bar line color
@@ -351,7 +352,7 @@ local function progressBar()
     ass:draw_start() --------------
     ass:rect_cw(1, 19, p, 11) -----
     ass:draw_stop() ---------------
-
+    if config.clock then
     ass:new_event() --------------- clock background
     ass:pos(w-128, 21) ------------
     ass:append('{\\bord2}') ------- border size
@@ -372,6 +373,7 @@ local function progressBar()
     ass:append('{\\1c&'..config.clock_color..'&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:append(os.date('%H:%M')) --
+    end
   end
   return percent
 end

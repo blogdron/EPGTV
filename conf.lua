@@ -60,6 +60,7 @@ local config =
    -------------------------
    --  top bar and clock  --
    -------------------------
+   clock = true,                  -- enable/disable clock on top right
    clock_color = '00FBFE',        -- clock color on top right side
    clock_bold  = true,            -- set false if clock outside screen
    progress_bar_color = '00FBFE', -- progress bar line color
