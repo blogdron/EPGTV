@@ -195,6 +195,8 @@ local ihas_epg_ids = false
 local list_url_ids = {   }
 local ihas_url_ids = false
 --------------------------
+local list_title_ids = { }
+--------------------------
 local list_epg_url = {   }
 local ihas_epg_url = false
 local list_epg_tab = {   }
@@ -733,6 +735,9 @@ local function parse_epg_data(data)
                         desc = desc:gsub('[\n "]+',' '); -- only oneline
                         zone = get_time_zone(start);
                     }
+                    if channels[channel] then
+                       programme[channels[channel]] = programme[channel]
+                    end
                     title   = nil
                     start   = nil
                     stop    = nil
@@ -1028,6 +1033,9 @@ local function show_epg(mode,show_type)
         end
     end
   end
+
+
+
 
   local mode_manual = 1
   local mode_auto   = 2
