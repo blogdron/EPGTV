@@ -195,8 +195,6 @@ local ihas_epg_ids = false
 local list_url_ids = {   }
 local ihas_url_ids = false
 --------------------------
-local list_title_ids = { }
---------------------------
 local list_epg_url = {   }
 local ihas_epg_url = false
 local list_epg_tab = {   }
