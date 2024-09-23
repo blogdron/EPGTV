@@ -1031,10 +1031,7 @@ local function show_epg(mode,show_type)
         end
     end
   end
-
-
-
-
+  ---
   local mode_manual = 1
   local mode_auto   = 2
   local detail_level
