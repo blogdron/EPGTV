@@ -721,6 +721,7 @@ local function parse_epg_data(data)
                  if not desc then
                     desc = msg_text.no_desctiption
                  end
+                 desc = desc:gsub('[\r\n ]+',' '); --only oneline
                  if not programme[channel] then
                     programme[channel] = { }
                  end
@@ -730,7 +731,7 @@ local function parse_epg_data(data)
                         name = channels[channel] or '#';
                        start = start:match('(%d+)%s-');  -- del timezone
                         stop = stop:match('(%d+)%s-');   -- del timezone
-                        desc = desc:gsub('[\n "]+',' '); -- only oneline
+                        desc = desc;
                         zone = get_time_zone(start);
                     }
                     if channels[channel] then
