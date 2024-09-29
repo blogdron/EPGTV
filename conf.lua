@@ -76,6 +76,10 @@ local config =
    --------------------------
    no_epg_color = '002DD1',   -- no EPG message color
    no_epg_size  = '25',       -- no EPG message font size
+   --------------------------
+   --    visual brakets    --
+   --------------------------
+   brakets = true,            -- on/off brakets for clock and percent progress
 }
 -------------------------------------------------------------------------------
 return config -- do not delete this line

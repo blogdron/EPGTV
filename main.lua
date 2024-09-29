@@ -86,6 +86,10 @@ local config =
    --------------------------
    no_epg_color = '002DD1',   -- no EPG message color
    no_epg_size  = '25',       -- no EPG message font size
+   --------------------------
+   --    visual brakets    --
+   --------------------------
+   brakets = true,            -- on/off brakets for clock and percent progress
 }
 -------------------------------------------------------------------------------
 -- Overloads default values from external config
@@ -945,7 +949,7 @@ local function get_tv_programm(el,channel)
                                                config.description_color,n.desc)
 
         elseif progstart > today_long  then
-           local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}⦗%s – %s⦘{\\b0\\fs%s} %s'..
+           local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s'..
                         ' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
            -- set upcoming channel programmes
            local  prog = fmts:format(config.upcoming_time_size,
@@ -977,6 +981,12 @@ local function get_tv_programm(el,channel)
      return nil
   end
   return program
+end
+-------------------------------------------------------------------------------
+local function program_concat(tab)
+    if config.brakets == false then
+       return table.concat(tab):gsub('[%(%)]+',' ')
+    end
 end
 -------------------------------------------------------------------------------
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
@@ -1056,11 +1066,11 @@ local function show_epg(mode,show_type)
         {
             table.unpack(data,1,detail_level) -- luacheck: ignore
         }
-        ov.data = table.concat(table_slice)
+        ov.data = program_concat(table_slice)
      elseif mode == mode_auto then
-        ov.data = table.concat(data)
+        ov.data = program_concat(data)
      else
-        ov.data = table.concat(data)
+        ov.data = program_concat(data)
      end
      curr_show_mode = mode
      curr_show_type = show_type
@@ -1097,7 +1107,7 @@ local function next_programms()
        timer = nil
     end
     table.remove(curr_program_list,1)
-    ov.data = table.concat(curr_program_list)
+    ov.data = program_concat(curr_program_list)
     progressBar()
     local w, h = mp.get_osd_size()
     mp.set_osd_ass(w, h, ass.text)
@@ -1315,11 +1325,11 @@ mp.add_periodic_timer(config.update_progress_duration,function()
                   {
                       table.unpack(curr_program_list,1,detail_level) -- luacheck: ignore
                   }
-                  ov.data = table.concat(table_slice)
+                  ov.data = program_concat(table_slice)
                elseif curr_show_mode == mode_auto then
-                  ov.data = table.concat(curr_program_list)
+                  ov.data = program_concat(curr_program_list)
                else
-                  ov.data = table.concat(curr_program_list)
+                  ov.data = program_concat(curr_program_list)
                end
                ov:update()
             end
