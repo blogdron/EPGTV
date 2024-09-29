@@ -80,6 +80,10 @@ local config =
    --    visual brakets    --
    --------------------------
    brakets = true,            -- on/off brakets for clock and percent progress
+   --------------------------
+   --  progress percents   --
+   --------------------------
+   progress_percentages=false,-- on/off percent or progress in top title
 }
 -------------------------------------------------------------------------------
 return config -- do not delete this line

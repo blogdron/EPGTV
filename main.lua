@@ -90,6 +90,10 @@ local config =
    --    visual brakets    --
    --------------------------
    brakets = true,            -- on/off brakets for clock and percent progress
+   --------------------------
+   --  progress percents   --
+   --------------------------
+   progress_percentages=true, -- on/off percent or progress in top title
 }
 -------------------------------------------------------------------------------
 -- Overloads default values from external config
@@ -987,6 +991,8 @@ local function program_concat(tab)
     if config.brakets == false then
        return table.concat(tab):gsub('[%(%)]+',' ')
     end
+
+    return table.concat(tab)
 end
 -------------------------------------------------------------------------------
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
