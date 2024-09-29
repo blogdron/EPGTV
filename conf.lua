@@ -83,7 +83,7 @@ local config =
    --------------------------
    --  progress percents   --
    --------------------------
-   progress_percentages=false,-- on/off percent or progress in top title
+   progress_percentages=true, -- on/off percent or progress in top title
 }
 -------------------------------------------------------------------------------
 return config -- do not delete this line

@@ -988,11 +988,15 @@ local function get_tv_programm(el,channel)
 end
 -------------------------------------------------------------------------------
 local function program_concat(tab)
-    if config.brakets == false then
-       return table.concat(tab):gsub('[%(%)]+',' ')
+    local text = table.concat(tab)
+    if config.progress_percentages == false then
+       text = text:gsub('%(.-%%%)',' ')
     end
-
-    return table.concat(tab)
+    ---
+    if config.brakets == false then
+       text = text:gsub('[%(%)]+',' ')
+    end
+    return text
 end
 -------------------------------------------------------------------------------
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
