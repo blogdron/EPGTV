@@ -987,6 +987,9 @@ local function get_tv_programm(el,channel)
   return program
 end
 -------------------------------------------------------------------------------
+-- This is small hack, for add options hide brakets and options hide percents,
+-- dont touch common application logic, just filter result output formated text
+-------------------------------------------------------------------------------
 local function program_concat(tab)
     local text = table.concat(tab)
     if config.progress_percentages == false then
