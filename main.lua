@@ -94,6 +94,12 @@ local config =
    --  progress percents   --
    --------------------------
    progress_percentages=true, -- on/off percent or progress in top title
+   --------------------------
+   --   playinfo style     --
+   --------------------------
+   top_title_playinfo_style=1, -- 1 -- time + percent in right
+                               -- 2 -- time + percent in left
+                               -- 3 -- time + percent under top title
 }
 -------------------------------------------------------------------------------
 -- Overloads default values from external config
@@ -940,11 +946,32 @@ local function get_tv_programm(el,channel)
            curr_program_start = progstart
            curr_program_stop = progstop
            local progress = calculatePercentage(progstart,progstop,today_long)
-           local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
-           -- set current channel programme
-           now.title = fmts:format(config.title_size,
-                                   config.title_color,n.title,
-                                   config.progress_size,progress,start,stop)
+           ---
+           if config.top_title_playinfo_style == 1 then
+              local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
+              -- set current channel programme
+              now.title = fmts:format(config.title_size,
+                                      config.title_color,n.title,
+                                      config.progress_size,progress,start,stop)
+           end
+           ---
+           if config.top_title_playinfo_style == 2 then
+               local fmts = '{\\fs%s\\1c&H%s}(%s%%) (%s - %s)  {\\b1\\bord2\\fs%s\\1c&H%s}%s \\N'
+               -- set current channel programme
+               now.title = fmts:format(config.progress_size,config.title_color,progress,start,stop,
+                                       config.title_size,
+                                       config.title_color,n.title)
+
+           end
+           ---
+           if config.top_title_playinfo_style == 3 then
+               local fmts = '{\\fs%s\\1c&H%s}(%s%%) (%s - %s) \\N {\\b1\\bord2\\fs%s\\1c&H%s}%s \\N'
+               -- set current channel programme
+               now.title = fmts:format(config.progress_size,config.title_color,progress,start,stop,
+                                       config.title_size,
+                                       config.title_color,n.title)
+
+           end
            -- inject programm description beetwen title and upcoming programms
           local fmts_description =
           '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N\\N'

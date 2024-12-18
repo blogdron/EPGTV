@@ -84,6 +84,12 @@ local config =
    --  progress percents   --
    --------------------------
    progress_percentages=true, -- on/off percent or progress in top title
+   --------------------------
+   --   playinfo style     --
+   --------------------------
+   top_title_playinfo_style=1, -- 1 -- time + percent in right
+                               -- 2 -- time + percent in left
+                               -- 3 -- time + percent under top title
 }
 -------------------------------------------------------------------------------
 return config -- do not delete this line
