@@ -14,6 +14,43 @@
 -------------------------------------------------------------------------------
 --   libASS subtitle format see: https://aegisub.org/docs/latest/ass_tags/   --
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+local os      = require 'os'
+local io      = require 'io'
+local mp      = require 'mp'
+local string  = require 'string'
+local utils   = require 'mp.utils'
+local assdraw = require 'mp.assdraw'
+local mp_msg  = require('mp.msg')
+-------------------------------------------------------------------------------
+-- Compatibility with 5.1
+-------------------------------------------------------------------------------
+table.unpack = table.unpack or unpack -- luacheck: ignore
+-------------------------------------------------------------------------------
+--- Add directly paths for search config file and slaxml module
+--- For fix issue: № 9 - 'mp.get_script_directory() return nil'
+-------------------------------------------------------------------------------
+local script_directory = mp.get_script_directory()
+-- try use mpv path info
+if type(script_directory) == 'string' then
+   -- for search conf.lua in EPGTV directory
+   package.path = package.path .. ';'.. script_directory .. '/?.lua'
+   -- for search slaxml.lua in EPGTV/slaxml directory
+   package.path = package.path .. ';'.. script_directory .. '/slaxml/?.lua'
+end
+-------------------------------------------------------------------------------
+-- Forced add own paths for Linux
+-- mp.get_script_directory can return invalid path (maybe)
+-------------------------------------------------------------------------------
+local home_dir = os.getenv('HOME')
+if home_dir then
+   local epgtv_dir  = home_dir .. '/.config/mpv/scripts/EPGTV/'
+   local slaxml_dir = home_dir .. '/.config/mpv/scripts/EPGTV/slaxml'
+   package.path = package.path .. ';' .. epgtv_dir  .. '/?.lua'
+   package.path = package.path .. ';' .. slaxml_dir .. '/?.lua'
+end
+-------------------------------------------------------------------------------
 local config =
 {
    -- key binding -------------------------------------------------------------
@@ -104,7 +141,6 @@ local config =
 -------------------------------------------------------------------------------
 -- Overloads default values from external config
 -------------------------------------------------------------------------------
-local mp_msg = require('mp.msg')
 local success, external_conf = pcall(require,'conf')
 if success and type(external_conf) == 'table' then
    for name,value in pairs(external_conf) do
@@ -179,17 +215,6 @@ local translates =
 -------------------------------------------------------------------------------
 local msg_text = translates[os.getenv('LANG')] or translates['en_US.UTF-8']
 -------------------------------------------------------------------------------
-local os = require 'os'
-local io = require 'io'
-local mp = require 'mp'
-local string  = require 'string'
-local utils   = require 'mp.utils'
-local assdraw = require 'mp.assdraw'
--------------------------------------------------------------------------------
--- Compatibility with 5.1
--------------------------------------------------------------------------------
-table.unpack = table.unpack or unpack -- luacheck: ignore
--------------------------------------------------------------------------------
 local ov  = mp.create_osd_overlay('ass-events')
 local ass = assdraw.ass_new()
 local timer
@@ -224,8 +249,6 @@ end
 -------------------------------------------------------------------------------
 -- Load XML parser
 -------------------------------------------------------------------------------
-local script_directory = mp.get_script_directory()
-package.path = package.path ..';'.. script_directory..'/slaxml/?.lua'
 local state,SLAXML = pcall(require,'slaxml')
 if not state then
    error('Failled load SLAXML module, plese install this depend')
