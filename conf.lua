@@ -18,7 +18,7 @@ local config =
    manual_show_details= 2,    -- number programs if manual_show_mode == 1
    -- auto show ---------------------------------------------------------------
    auto_show_program  = true, -- show tv program if tv channel opened, changed
-   auto_show_mode     = 2,    -- mode 1 == manual detail, mode 2 == full detail
+   auto_show_mode     = 2,    -- 1 == manual detail, 2 == full detail, 3 == light mode
    auto_show_details  = 2,    -- number programs if auto_show_mode == 1
    -- auto close --------------------------------------------------------------
    auto_close_program = true, -- autoclose tv program (scroll,toggle ignored it)
@@ -33,8 +33,12 @@ local config =
    -- special -----------------------------------------------------------------
    ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
    -- system depend configuration ---------------------------------------------
-   curl_path   = '/usr/bin/curl', -- set fullpath to you curl installation
-   gzip_path   = '/usr/bin/gzip', -- set fullpath to you gzip installation
+   zip_software = 1,               -- 1 == gzip, 2 == 7-Zip
+   curl_path    = '/usr/bin/curl', -- set fullpath to you curl installation
+   zip_path     = '/usr/bin/gzip', -- set fullpath to you zip installation
+   -- auto update cache -------------------------------------------------------
+   auto_cache_refresh = false,  -- enable/disable automatic cache refresh
+   cache_refresh_days = 2,      -- set days before refresh
    ----------------------------------------------------------------------------
    -- visual/style, colors and font sizes (! use BGR colors, not RGB !)
    ----------------------------------------------------------------------------
@@ -71,6 +75,11 @@ local config =
    background = true,            -- enable/disable background filling
    background_opacity = '40',    -- allow 10,20,30,40,50,60,70,80,90 opacity
    background_color   = '000000',-- change background color if you need it
+   -------------------------
+   --  background height  --
+   -------------------------
+   background_for_info  = '25',   -- background height for information messages
+   background_for_light = '0.2',  -- background height only for light mode (0 to 1)
    --------------------------
    --  message no tv info  --
    --------------------------
