@@ -234,7 +234,7 @@ local translates =
        parse_tv_program  = 'Разбор ТВ программ';
        save_tv_to_cache  = 'Сохранение ТВ программ в кэш';
        load_tv_cache     = 'Загрузка кэша ТВ программ';
-	   expired_cache     = 'Кэш истек, обновление';
+       expired_cache     = 'Кэш устарел, обновление';
        tomorrow          = 'Завтра';
        skip              = 'Пропуск';
        download_tv_program = 'Загрузка ТВ программ';
@@ -369,7 +369,7 @@ if home_linux_dir then
    end
 elseif home_windows_dir then
 	config.epg_tmp_dir = mp.command_native({"expand-path", "~~home/"}).."/EPGTV"
-	
+
 	utils.subprocess({
 		args = {
 			'powershell', '-NoProfile', '-Command',
@@ -612,7 +612,7 @@ local function extract_file_to_data(source_file)
    if not source_file then
       return nil
    end
-   
+
    local args
    if config.zip_software == 1 then
       args = { config.zip_path, '-c', '-d', source_file }
@@ -622,7 +622,7 @@ local function extract_file_to_data(source_file)
       mp_msg.error("EPGTV: invalid zip_software setting ("..tostring(config.zip_software)..")")
       return nil
    end
-   
+
    local data = utils.subprocess(
    {
        capture_size   = 1024*1024*1024,
@@ -736,14 +736,14 @@ local function check_epg_cache(url)
       if not filehndl then
           return false
       end
-	  
+
       local head = filehndl:read(#config.cache_file_head)
       filehndl:close()
-	  
+
       if head ~= config.cache_file_head then
           return false
       end
-	  
+
       -- If enabled check cache age
       if config.auto_cache_refresh then
           local info = utils.file_info(filename)
@@ -757,7 +757,7 @@ local function check_epg_cache(url)
               end
           end
       end
-	  
+
       message(msg_text.found_cache..' '..url..' '..msg_text.skip_download)
       return true
 end
@@ -1120,7 +1120,7 @@ local function get_tv_programm(el,channel,mode)
 											config.upcoming_description_color,
 											config.upcoming_description_size,
 											n.desc:gsub('\n',''))
-		
+
 				if progdate == tomorrow then
 					local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
 					program_next_day[#program_next_day+1] =
