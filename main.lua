@@ -10,6 +10,7 @@
 --                                                                           --
 --               Copyright © 2020 Peter Žember; MIT Licensed                 --
 --               Copyright © 2024 Fedor Elizarov; MIT Licensed               --
+--               Copyright © 2025 Luca Bianchi; MIT Licensed                 --
 --             See https://github.com/blogdron/EPGTV for details.            --
 -------------------------------------------------------------------------------
 --   libASS subtitle format see: https://aegisub.org/docs/latest/ass_tags/   --
