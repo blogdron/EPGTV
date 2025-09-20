@@ -64,8 +64,8 @@ local config =
    manual_show_mode   = 2,    -- mode 1 == manual detail, mode 2 == full detail
    manual_show_details= 2,    -- number programs if manual_show_mode == 1
    -- auto show ---------------------------------------------------------------
-   auto_show_program  = true, -- show tv program if tv channel changed in mpv
-   auto_show_mode     = 2,    -- mode 1 == manual detail, mode 2 == full detail
+   auto_show_program  = true, -- show tv program if tv channel opened, changed
+   auto_show_mode     = 2,    -- 1 == manual detail, 2 == full detail, 3 == light mode
    auto_show_details  = 2,    -- number programs if auto_show_mode == 1
    -- auto close --------------------------------------------------------------
    auto_close_program = true, -- autoclose tv program (scroll,toggle ignored it)
@@ -80,8 +80,12 @@ local config =
    -- special -----------------------------------------------------------------
    ignore_noepg_m3u   = true, -- ignore playlist if M3U not contains EPG link
    -- system depend configuration ---------------------------------------------
-   curl_path   = '/usr/bin/curl', -- set fullpath to you curl installation
-   gzip_path   = '/usr/bin/gzip', -- set fullpath to you gzip installation
+   zip_software = 1,               -- 1 == gzip, 2 == 7-Zip
+   curl_path    = '/usr/bin/curl', -- set fullpath to you curl installation
+   zip_path     = '/usr/bin/gzip', -- set fullpath to you zip installation
+   -- auto update cache -------------------------------------------------------
+   auto_cache_refresh = false,  -- enable/disable automatic cache refresh
+   cache_refresh_days = 2,      -- set days before refresh
    ----------------------------------------------------------------------------
    -- visual/style, colors and font sizes (! use BGR colors, not RGB !)
    ----------------------------------------------------------------------------
@@ -116,8 +120,13 @@ local config =
    -- darkness background --
    -------------------------
    background = true,            -- enable/disable background filling
-   background_opacity = '40',    -- allow 10,20,20,40,50,60,80,90 opacity
+   background_opacity = '40',    -- allow 10,20,30,40,50,60,70,80,90 opacity
    background_color   = '000000',-- change background color if you need it
+   -------------------------
+   --  background height  --
+   -------------------------
+   background_for_info  = '25',   -- background height for information messages
+   background_for_light = '0.2',  -- background height only for light mode (0 to 1)
    --------------------------
    --  message no tv info  --
    --------------------------
@@ -144,7 +153,7 @@ local config =
 local success, external_conf = pcall(require,'conf')
 if success and type(external_conf) == 'table' then
    for name,value in pairs(external_conf) do
-       if config[name] then
+       if config[name] ~= nil then
           config[name] = value
        end
    end
@@ -175,6 +184,7 @@ local translates =
        parse_tv_program  = 'Parse TV program';
        save_tv_to_cache  = 'Save TV program cache';
        load_tv_cache     = 'Load TV cache';
+	   expired_cache     = 'Cache expired, refreshing';
        tomorrow          = 'Tomorrow';
        skip              = 'Skip';
        download_tv_program = 'Download TV program';
@@ -186,6 +196,30 @@ local translates =
        no_have_variable_windows = "No have 'LOCALAPPDATA' envilopment variable (Windows)";
 
     };
+	['it_IT.UTF-8'] =
+	{
+	   no_desctiption              = 'Nessuna descrizione';
+	   failed_create_dir           = 'Impossibile creare la directory del modello';
+	   found_channel               = 'Canale TV trovato';
+	   found_stream                = 'Stream trovato';
+	   found_epg_source            = 'Fonte del programma TV trovata';
+	   found_cache                 = 'Cache trovata';
+	   skip_download               = 'Download saltato';
+	   unpack_tv_program           = 'Estrazione del programma TV';
+	   parse_tv_program            = 'Analisi del programma TV';
+	   save_tv_to_cache            = 'Salvataggio del programma TV nella cache';
+	   load_tv_cache               = 'Caricamento della cache TV';
+	   expired_cache               = 'Cache scaduta, aggiornamento';
+	   tomorrow                    = 'Domani';
+	   skip                        = 'Salta';
+	   download_tv_program         = 'Download del programma TV';
+	   failed_get_data_from        = 'Impossibile ottenere dati da';
+	   cache_allready_loaded       = 'Cache già caricata';
+	   no_have_cache               = 'Cache non disponibile per il pre-caricamento';
+	   no_have_tv_program          = 'Nessun programma TV disponibile per questo canale';
+	   no_have_variable_linux      = "Variabile d'ambiente 'HOME' non disponibile (Linux)";
+	   no_have_variable_windows    = "Variabile d'ambiente 'LOCALAPPDATA' non disponibile (Windows)";
+	};
     ['ru_RU.UTF-8'] =
     {
        no_desctiption    = 'Нет описания';
@@ -199,6 +233,7 @@ local translates =
        parse_tv_program  = 'Разбор ТВ программ';
        save_tv_to_cache  = 'Сохранение ТВ программ в кэш';
        load_tv_cache     = 'Загрузка кэша ТВ программ';
+	   expired_cache     = 'Кэш истек, обновление';
        tomorrow          = 'Завтра';
        skip              = 'Пропуск';
        download_tv_program = 'Загрузка ТВ программ';
@@ -213,7 +248,25 @@ local translates =
 -------------------------------------------------------------------------------
 -- Detect Language
 -------------------------------------------------------------------------------
-local msg_text = translates[os.getenv('LANG')] or translates['en_US.UTF-8']
+local lang_key
+if mp.get_property_native("platform") == "windows" then
+    local res = utils.subprocess({
+        args = {
+            'powershell', '-NoProfile', '-Command',
+            '(Get-WinSystemLocale).Name'
+        },
+        capture_stdout = true,
+        cancellable = false
+    })
+    lang_key = res.stdout and res.stdout
+        :gsub("%s+", "")
+        :gsub("-", "_")
+        :gsub("%.UTF%-8$", "") .. ".UTF-8"
+else
+    lang_key = os.getenv('LANG')
+end
+
+local msg_text = translates[lang_key] or translates['en_US.UTF-8']
 -------------------------------------------------------------------------------
 local ov  = mp.create_osd_overlay('ass-events')
 local ass = assdraw.ass_new()
@@ -271,7 +324,7 @@ local function message(msg)
        ass:append('{\\3c&000000&}') -- border color
        ass:append('{\\1a&80&}') ------ alpha
        ass:draw_start() --------------
-       ass:round_rect_cw(0, 2,w,25,0)
+       ass:round_rect_cw(0, 2,w,config.background_for_info,0)
        ass:draw_stop()----------------
 
        ass:new_event() --------------- progress bar background
@@ -314,8 +367,16 @@ if home_linux_dir then
       return
    end
 elseif home_windows_dir then
-   config.epg_tmp_dir = home_windows_dir..'\\EPGTV'
-   os.execute('mkdir '..config.epg_tmp_dir)
+	config.epg_tmp_dir = mp.command_native({"expand-path", "~~home/"}).."/EPGTV"
+	
+	utils.subprocess({
+		args = {
+			'powershell', '-NoProfile', '-Command',
+			'New-Item -ItemType Directory -Force -Path "'..config.epg_tmp_dir..'"'
+		},
+		cancellable = false
+	})
+
    local info = utils.file_info(config.epg_tmp_dir)
    if not info.is_dir then
       message(msg_text.failed_create_dir..' '..config.epg_tmp_dir)
@@ -357,6 +418,10 @@ local function progressBar()
   end
   local w, h = mp.get_osd_size()
   local p = ((w-14)/100)*percent
+  local bg_height = h
+  if curr_show_mode == 3 then  -- light mode
+      bg_height = math.floor(h * config.background_for_light)
+  end
   if w and w > 0  then
     if config.background then
     ass:new_event() --------------- darkness background
@@ -367,7 +432,7 @@ local function progressBar()
     ass:append('{\\1c&'..config.background_color..'&}') -- background color
     ass:append('{\\3c&000000&}') -- border color
     ass:draw_start()---------------
-    ass:round_rect_cw(0, 0, w, h, 2)
+    ass:round_rect_cw(0, 0, w, bg_height, 2)
     ass:draw_stop() ---------------
     end
     ass:new_event() --------------- progress bar background
@@ -540,18 +605,29 @@ local function new_file_is_m3u()
    return false
 end
 -------------------------------------------------------------------------------
--- Utilite for extract gz archive in memory
+-- Utilite for extract archive in memory
 -------------------------------------------------------------------------------
 local function extract_file_to_data(source_file)
    if not source_file then
       return nil
    end
+   
+   local args
+   if config.zip_software == 1 then
+      args = { config.zip_path, '-c', '-d', source_file }
+   elseif config.zip_software == 2 then
+      args = { config.zip_path, 'x', '-so', source_file }
+   else
+      mp_msg.error("EPGTV: invalid zip_software setting ("..tostring(config.zip_software)..")")
+      return nil
+   end
+   
    local data = utils.subprocess(
    {
        capture_size   = 1024*1024*1024,
        cancellable    = false,
        capture_stdout = true ,
-       args = { config.gzip_path,'-c','-d', source_file }
+       args = args
    })
    if data.status ~= 0 then
       return nil
@@ -572,6 +648,16 @@ local function get_m3u_data()
    return load_file_to_data(playlist)
 end
 -------------------------------------------------------------------------------
+-- Normalization function
+-------------------------------------------------------------------------------
+local function normalize(s)
+    return (s or "")
+        :gsub("\r","")
+        :gsub("\n","")
+        :gsub("%s+$","")
+        :gsub("^%s+","")
+end
+-------------------------------------------------------------------------------
 -- Try find tvg-id aka TV channels identificators in M3U playlist
 -------------------------------------------------------------------------------
 local function get_epg_ids_from_m3u()
@@ -582,15 +668,16 @@ local function get_epg_ids_from_m3u()
    local curr_name = nil
    for line in m3u_data:gmatch('[^\n]+') do
        if line:find('#EXTINF') then
-          local name = line:match('%,(.+)');
+          local name = line:match('%,(.+)')
           local id   = line:match('tvg%-id="(.-)"')
           if name and id then
+			 name = normalize(name)
              message(msg_text.found_channel..' '..name)
              list_epg_ids[name]=id
              ihas_epg_ids = true
              curr_name = name
           elseif name then
-             curr_name = name
+             curr_name = normalize(name)
           end
        elseif line:find('://') and not line:find(' ') and curr_name then
           message(msg_text.found_stream..' '..curr_name)
@@ -645,16 +732,33 @@ local function check_epg_cache(url)
       end
       local filename = url_to_cache_path(url)
       local filehndl = io.open(filename)
-      if filehndl then
-         local head = filehndl:read(#config.cache_file_head)
-         if head == config.cache_file_head then
-            filehndl:close()
-            message(msg_text.found_cache..' '..url..' '..msg_text.skip_download)
-            return true
-         end
-         return false
+      if not filehndl then
+          return false
       end
-      return false
+	  
+      local head = filehndl:read(#config.cache_file_head)
+      filehndl:close()
+	  
+      if head ~= config.cache_file_head then
+          return false
+      end
+	  
+      -- If enabled check cache age
+      if config.auto_cache_refresh then
+          local info = utils.file_info(filename)
+          if info and info.mtime then
+              local now = os.time()
+              local age = now - info.mtime
+              local max_age = config.cache_refresh_days * 24 * 60 * 60
+              if age > max_age then
+                  message(msg_text.expired_cache..' '..url)
+                  return false -- force download
+              end
+          end
+      end
+	  
+      message(msg_text.found_cache..' '..url..' '..msg_text.skip_download)
+      return true
 end
 -------------------------------------------------------------------------------
 -- Save table EPG channels data for reuse after
@@ -932,10 +1036,11 @@ end
 -------------------------------------------------------------------------------
 -- Try find channel in EPG data table,make formated strings for mpv overlay
 -------------------------------------------------------------------------------
-local function get_tv_programm(el,channel)
+local function get_tv_programm(el,channel,mode)
   if not el or not el[channel] then
      return
   end
+  local mode_light = (mode == 3)
   local program = {}
   local program_next_day = {}
   local now =
@@ -984,7 +1089,6 @@ local function get_tv_programm(el,channel)
                now.title = fmts:format(config.progress_size,config.title_color,progress,start,stop,
                                        config.title_size,
                                        config.title_color,n.title)
-
            end
            ---
            if config.top_title_playinfo_style == 3 then
@@ -993,35 +1097,53 @@ local function get_tv_programm(el,channel)
                now.title = fmts:format(config.progress_size,config.title_color,progress,start,stop,
                                        config.title_size,
                                        config.title_color,n.title)
-
            end
            -- inject programm description beetwen title and upcoming programms
-          local fmts_description =
-          '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N\\N'
-           now.title = fmts_description:format(now.title,
-                                               config.description_size,
-                                               config.description_color,n.desc)
+		   if not mode_light then
+			   local fmts_description =
+			   '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N\\N'
+			   now.title = fmts_description:format(now.title,
+												   config.description_size,
+												   config.description_color,n.desc)
+			end
 
         elseif progstart > today_long  then
-           local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s'..
-                        ' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
-           -- set upcoming channel programmes
-           local  prog = fmts:format(config.upcoming_time_size,
-                                     config.upcoming_color,start,stop,
-                                     config.upcoming_title_size,
-                                     n.title,
-                                     config.upcoming_description_color,
-                                     config.upcoming_description_size,
-                                     n.desc:gsub('\n',''))
-
-           if progdate == tomorrow then
-              local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
-              program_next_day[#program_next_day+1] =
-              fmts_tomorrow:format(config.tomorrow_prefix_size,
-                                   config.tomorrow_prefix_color,
-                                   msg_text.tomorrow,prog)
-           else
-              program[#program+1] = prog
+		   if not mode_light then
+				local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s'..
+								' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
+				-- set upcoming channel programmes
+				local  prog = fmts:format(config.upcoming_time_size,
+											config.upcoming_color,start,stop,
+											config.upcoming_title_size,
+											n.title,
+											config.upcoming_description_color,
+											config.upcoming_description_size,
+											n.desc:gsub('\n',''))
+		
+				if progdate == tomorrow then
+					local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
+					program_next_day[#program_next_day+1] =
+					fmts_tomorrow:format(config.tomorrow_prefix_size,
+										config.tomorrow_prefix_color,
+										msg_text.tomorrow,prog)
+				else
+					program[#program+1] = prog
+				end
+		   else  -- light mode
+               local fmts_light = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s\\N'
+               local prog = fmts_light:format(config.upcoming_time_size,
+                                              config.upcoming_color,start,stop,
+                                              config.upcoming_title_size,
+                                              n.title)
+               if progdate == tomorrow then
+                  local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
+                  program_next_day[#program_next_day+1] =
+                  fmts_tomorrow:format(config.tomorrow_prefix_size,
+                                       config.tomorrow_prefix_color,
+                                       msg_text.tomorrow,prog)
+               else
+                  program[#program+1] = prog
+               end
            end
         end
      end
@@ -1029,7 +1151,7 @@ local function get_tv_programm(el,channel)
   table.insert(program,1,"") -- this empty element for correct scroll down
   table.insert(program,2,now.title) -- first empty element, next curr program
   for _,prog in ipairs(program_next_day) do
-  table.insert(program,prog)
+	table.insert(program,prog)
   end
   if #program == 0 then
      return nil
@@ -1069,11 +1191,11 @@ local function show_epg(mode,show_type)
   local data
   local channelID
   -- try find from normal tvg-id channel name
-  local channel   = mp.get_property('media-title')
+  local channel   = normalize(mp.get_property('media-title'))
   channelID = list_epg_ids[channel]
   if channelID and list_epg_tab then
      for _,tvdata in pairs(list_epg_tab) do
-         data = get_tv_programm(tvdata,channelID)
+         data = get_tv_programm(tvdata,channelID,mode)
          if data then
             break
          end
@@ -1085,7 +1207,7 @@ local function show_epg(mode,show_type)
      channelID = list_url_ids[stream]
      if channelID and list_epg_tab then
         for _,tvdata in pairs(list_epg_tab) do
-            data = get_tv_programm(tvdata,channelID)
+            data = get_tv_programm(tvdata,channelID,mode)
             if data then
                break
             end
@@ -1098,7 +1220,7 @@ local function show_epg(mode,show_type)
      channelID = slice:match('[^/]+$')
      if channelID and list_epg_tab then
         for _,tvdata in pairs(list_epg_tab) do
-            data = get_tv_programm(tvdata,channelID)
+            data = get_tv_programm(tvdata,channelID,mode)
             if data then
                break
             end
@@ -1108,6 +1230,7 @@ local function show_epg(mode,show_type)
   ---
   local mode_manual = 1
   local mode_auto   = 2
+  local mode_light  = 3
   local detail_level
   if show_type == 'auto' then
      detail_level = config.auto_show_details + 1
@@ -1132,6 +1255,9 @@ local function show_epg(mode,show_type)
         ov.data = program_concat(table_slice)
      elseif mode == mode_auto then
         ov.data = program_concat(data)
+	 elseif mode == mode_light then
+		local light_slice = { data[2], data[3] }
+		ov.data = program_concat(light_slice)
      else
         ov.data = program_concat(data)
      end
@@ -1369,8 +1495,9 @@ mp.add_periodic_timer(config.update_progress_duration,function()
          -- update percent number value
          -- and refresh program tv list
          if curr_program_list[id] then
-            local mode_manual = 1
-            local mode_auto   = 2
+            local mode_manual  = 1
+            local mode_auto    = 2
+			local mode_light   = 3
 
             local detail_level
             if curr_show_type == 'auto' then
@@ -1391,6 +1518,9 @@ mp.add_periodic_timer(config.update_progress_duration,function()
                   ov.data = program_concat(table_slice)
                elseif curr_show_mode == mode_auto then
                   ov.data = program_concat(curr_program_list)
+			   elseif curr_show_mode == mode_light then
+				  local light_slice = { curr_program_list[2], curr_program_list[3] }
+				  ov.data = program_concat(light_slice)
                else
                   ov.data = program_concat(curr_program_list)
                end
