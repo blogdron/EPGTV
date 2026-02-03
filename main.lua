@@ -630,14 +630,14 @@ local ihas_url_ids = false -- init in M3U parcer (get_epg_ids_from_m3u)
 local list_epg_url = {   } -- list_epg_url[index+1] = url_to_epg_xml_archive
 local ihas_epg_url = false -- init in M3U parcer (get_epg_url_from_m3u)
 -- Prerepared EPG cache data for search tv programms
-local list_epg_tab = {   } -- init (show_epg),(get_epg_data),(get_all_epg_cache)
+local list_epg_cache = {   } -- init (show_epg),(get_epg_data),(get_all_epg_cache)
 -------------------------------------------------------------------------------
 local function clear_epgtv_state()
    list_epg_ids = {   }
    ihas_epg_ids = false
    list_epg_url = {   }
    ihas_epg_url = false
-   list_epg_tab = {   }
+   list_epg_cache = {   }
    collectgarbage('collect')
 end
 -------------------------------------------------------------------------------
@@ -1321,17 +1321,17 @@ local function get_epg_data(force_download)
                     message(msg_text.failed_get_data_from..' '..url)
                     return
                  end
-                 list_epg_tab[filename] = tab
+                 list_epg_cache[filename] = tab
                  message(msg_text.save_tv_to_cache)
-                 save_epg_cache_to_file(list_epg_tab[filename],filename,url)
+                 save_epg_cache_to_file(list_epg_cache[filename],filename,url)
               else
                  message(msg_text.failed_get_data_from..' '..url)
               end
-           elseif not list_epg_tab[filename] then
+           elseif not list_epg_cache[filename] then
              message(msg_text.load_tv_cache..' '..fileshort)
              local tab = load_epg_cache_from_file(filename)
              if tab then
-                list_epg_tab[filename] = tab
+                list_epg_cache[filename] = tab
              else
                 message(msg_text.failed_get_data_from..' '..fileshort)
              end
@@ -1527,8 +1527,8 @@ local function show_epg(mode,show_type)
   -- try find from normal tvg-id channel name
   local channel   = normalize(mp.get_property('media-title'))
   channelID = list_epg_ids[channel]
-  if channelID and list_epg_tab then
-     for _,tvdata in pairs(list_epg_tab) do
+  if channelID and list_epg_cache then
+     for _,tvdata in pairs(list_epg_cache) do
          data = get_tv_programm(tvdata,channelID,mode)
          if data then
             break
@@ -1539,8 +1539,8 @@ local function show_epg(mode,show_type)
   if not data then
      local stream = mp.get_property('stream-open-filename')
      channelID = list_url_ids[stream]
-     if channelID and list_epg_tab then
-        for _,tvdata in pairs(list_epg_tab) do
+     if channelID and list_epg_cache then
+        for _,tvdata in pairs(list_epg_cache) do
             data = get_tv_programm(tvdata,channelID,mode)
             if data then
                break
@@ -1552,8 +1552,8 @@ local function show_epg(mode,show_type)
   if not data then
      local slice = mp.get_property('stream-open-filename') or ''
      channelID = slice:match('[^/]+$')
-     if channelID and list_epg_tab then
-        for _,tvdata in pairs(list_epg_tab) do
+     if channelID and list_epg_cache then
+        for _,tvdata in pairs(list_epg_cache) do
             data = get_tv_programm(tvdata,channelID,mode)
             if data then
                break
@@ -1684,11 +1684,11 @@ local function load_all_epg_cache()
     if filelist and #filelist > 0 then
        for _,file in pairs(filelist) do
            local fullpath = utils.join_path(config.epg_tmp_dir,file)
-           if not list_epg_tab[fullpath] then
+           if not list_epg_cache[fullpath] then
               message(msg_text.load_tv_cache..' '..file)
               local tab = load_epg_cache_from_file(fullpath)
               if tab then
-                 list_epg_tab[fullpath] = tab
+                 list_epg_cache[fullpath] = tab
               else
                 message(msg_text.skip..' '..file)
               end
