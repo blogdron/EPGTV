@@ -483,6 +483,12 @@ local config =
    top_title_playinfo_style=1, -- 1 -- time + percent in right
                                -- 2 -- time + percent in left
                                -- 3 -- time + percent under top title
+   --------------------------
+   --   cache load modes   --
+   --------------------------
+   all_cache_in_memory = false, -- on/off store all EPG cache in RAM
+                                -- false - if you EPG large, use with index file
+                                -- true  - if you EPG small, use just cache file
 }
 -------------------------------------------------------------------------------
 -- Overloads default values from external config
@@ -521,42 +527,48 @@ local translates =
        parse_tv_program  = 'Parse TV program';
        save_tv_to_cache  = 'Save TV program cache';
        load_tv_cache     = 'Load TV cache';
-	   expired_cache     = 'Cache expired, refreshing';
+       load_tv_cache_index = 'Load TV cache index';
+       generate_cache_index= 'Generate TV cache index';
+       expired_cache     = 'Cache expired, refreshing';
        tomorrow          = 'Tomorrow';
        skip              = 'Skip';
        download_tv_program = 'Download TV program';
        failed_get_data_from = 'Failed get data from';
        cache_allready_loaded = 'Cache allready loaded';
+       cache_index_allready_loaded = 'Cache index allready loaded';
        no_have_cache     = 'No have cache for preload';
        no_have_tv_program= 'No have TV program for this channel';
        no_have_variable_linux   = "No have 'HOME' envilopment variable (Linux)";
        no_have_variable_windows = "No have 'LOCALAPPDATA' envilopment variable (Windows)";
 
     };
-	['it_IT.UTF-8'] =
-	{
-	   no_desctiption              = 'Nessuna descrizione';
-	   failed_create_dir           = 'Impossibile creare la directory del modello';
-	   found_channel               = 'Canale TV trovato';
-	   found_stream                = 'Stream trovato';
-	   found_epg_source            = 'Fonte del programma TV trovata';
-	   found_cache                 = 'Cache trovata';
-	   skip_download               = 'Download saltato';
-	   unpack_tv_program           = 'Estrazione del programma TV';
-	   parse_tv_program            = 'Analisi del programma TV';
-	   save_tv_to_cache            = 'Salvataggio del programma TV nella cache';
-	   load_tv_cache               = 'Caricamento della cache TV';
-	   expired_cache               = 'Cache scaduta, aggiornamento';
-	   tomorrow                    = 'Domani';
-	   skip                        = 'Salta';
-	   download_tv_program         = 'Download del programma TV';
-	   failed_get_data_from        = 'Impossibile ottenere dati da';
-	   cache_allready_loaded       = 'Cache già caricata';
-	   no_have_cache               = 'Cache non disponibile per il pre-caricamento';
-	   no_have_tv_program          = 'Nessun programma TV disponibile per questo canale';
-	   no_have_variable_linux      = "Variabile d'ambiente 'HOME' non disponibile (Linux)";
-	   no_have_variable_windows    = "Variabile d'ambiente 'LOCALAPPDATA' non disponibile (Windows)";
-	};
+    ['it_IT.UTF-8'] =
+    {
+       no_desctiption              = 'Nessuna descrizione';
+       failed_create_dir           = 'Impossibile creare la directory del modello';
+       found_channel               = 'Canale TV trovato';
+       found_stream                = 'Stream trovato';
+       found_epg_source            = 'Fonte del programma TV trovata';
+       found_cache                 = 'Cache trovata';
+       skip_download               = 'Download saltato';
+       unpack_tv_program           = 'Estrazione del programma TV';
+       parse_tv_program            = 'Analisi del programma TV';
+       save_tv_to_cache            = 'Salvataggio del programma TV nella cache';
+       load_tv_cache               = 'Caricamento della cache TV';
+       load_tv_cache_index         = 'Caricamento della cache TV indice';
+       generate_cache_index        = 'Genera indice cache TV';
+       expired_cache               = 'Cache scaduta, aggiornamento';
+       tomorrow                    = 'Domani';
+       skip                        = 'Salta';
+       download_tv_program         = 'Download del programma TV';
+       failed_get_data_from        = 'Impossibile ottenere dati da';
+       cache_allready_loaded       = 'Cache già caricata';
+       cache_index_allready_loaded = 'Cache index già caricata';
+       no_have_cache               = 'Cache non disponibile per il pre-caricamento';
+       no_have_tv_program          = 'Nessun programma TV disponibile per questo canale';
+       no_have_variable_linux      = "Variabile d'ambiente 'HOME' non disponibile (Linux)";
+       no_have_variable_windows    = "Variabile d'ambiente 'LOCALAPPDATA' non disponibile (Windows)";
+    };
     ['ru_RU.UTF-8'] =
     {
        no_desctiption    = 'Нет описания';
@@ -570,12 +582,15 @@ local translates =
        parse_tv_program  = 'Разбор ТВ программ';
        save_tv_to_cache  = 'Сохранение ТВ программ в кэш';
        load_tv_cache     = 'Загрузка кэша ТВ программ';
+       load_tv_cache_index = 'Загрузка интекса кэша ТВ программ';
+       generate_cache_index= 'Генерация индекса кэша ТВ программ';
        expired_cache     = 'Кэш устарел, обновление';
        tomorrow          = 'Завтра';
        skip              = 'Пропуск';
        download_tv_program = 'Загрузка ТВ программ';
        failed_get_data_from = 'Не удалось получить данные из';
        cache_allready_loaded = 'Кэш уже загружен';
+       cache_index_allready_loaded = 'Индекс кэша уже загружен';
        no_have_cache     = 'Нет кэша для подгрузки';
        no_have_tv_program= 'Нет ТВ программы для этого канала';
        no_have_variable_linux   = "Нет переменной окружения 'HOME' (Linux)";
@@ -631,6 +646,10 @@ local list_epg_url = {   } -- list_epg_url[index+1] = url_to_epg_xml_archive
 local ihas_epg_url = false -- init in M3U parcer (get_epg_url_from_m3u)
 -- Prerepared EPG cache data for search tv programms
 local list_epg_cache = {   } -- init (show_epg),(get_epg_data),(get_all_epg_cache)
+-- Prepared EPG cache index file for low memory usage and not load full large
+-- EPG cache in to memory for exmple my EPG cache is 1.4 GB in memory its ~3GB
+-- index file store offsets for load selected TV channel from EPG as slice
+local list_epg_cache_index = {   }
 -------------------------------------------------------------------------------
 local function clear_epgtv_state()
    list_epg_ids = {   }
@@ -638,6 +657,7 @@ local function clear_epgtv_state()
    list_epg_url = {   }
    ihas_epg_url = false
    list_epg_cache = {   }
+   list_epg_cache_index = {   }
    collectgarbage('collect')
 end
 -------------------------------------------------------------------------------
@@ -701,15 +721,15 @@ if home_linux_dir then
       return
    end
 elseif home_windows_dir then
-	config.epg_tmp_dir = mp.command_native({"expand-path", "~~home/"}).."/EPGTV"
+    config.epg_tmp_dir = mp.command_native({"expand-path", "~~home/"}).."/EPGTV"
 
-	utils.subprocess({
-		args = {
-			'powershell', '-NoProfile', '-Command',
-			'New-Item -ItemType Directory -Force -Path "'..config.epg_tmp_dir..'"'
-		},
-		cancellable = false
-	})
+    utils.subprocess({
+        args = {
+            'powershell', '-NoProfile', '-Command',
+            'New-Item -ItemType Directory -Force -Path "'..config.epg_tmp_dir..'"'
+        },
+        cancellable = false
+    })
 
    local info = utils.file_info(config.epg_tmp_dir)
    if not info.is_dir then
@@ -1005,7 +1025,7 @@ local function get_epg_ids_from_m3u()
           local name = line:match('%,(.+)')
           local id   = line:match('tvg%-id="(.-)"')
           if name and id then
-			 name = normalize(name)
+             name = normalize(name)
              message(msg_text.found_channel..' '..name)
              list_epg_ids[name]=id
              ihas_epg_ids = true
@@ -1052,6 +1072,31 @@ local function get_epg_url_from_m3u()
    return ihas_epg_url
 end
 -------------------------------------------------------------------------------
+-- Get EPG index file for get EPG slice data from cache blob
+-------------------------------------------------------------------------------
+local function load_epg_cache_index_from_file(index_filename)
+     local index_file = io.open(index_filename)
+     if not index_file then
+        return nil
+     end
+     local cache_index = nil
+     local fmts = "(.-),%s(%d+),%s(%d+)"
+     for line in index_file:lines() do
+
+         local name, from, to = line:match(fmts)
+         from = tonumber(from)
+         to   = tonumber(to)
+         if name and from and to then
+            if not cache_index then
+               cache_index = { }
+            end
+            cache_index[name] = {from = from, to = to}
+         end
+     end
+     index_file:close()
+     return cache_index
+end
+-------------------------------------------------------------------------------
 -- Convert EPG source url or path to simple string and build path to cache dir
 -------------------------------------------------------------------------------
 local function url_to_cache_path(url)
@@ -1095,26 +1140,57 @@ local function check_epg_cache(url)
       return true
 end
 -------------------------------------------------------------------------------
--- Save table EPG channels data for reuse after
+-- Save table EPG channels cache data for reuse after
+-- Save table EPG channels cache index for reuse after
 -------------------------------------------------------------------------------
-local function save_epg_cache_to_file(source_table,output_file,source_url)
-      if not source_url or not output_file or not source_table then
+local function save_epg_cache_to_file(cache_table,output_file,source_url)
+      if not source_url or not output_file or not cache_table then
          return false
       end
-      local filehndl = io.open(output_file,'w')
-      if not filehndl then
+      local currname = nil
+      local file_cache = io.open(output_file,'w')
+      local file_cache_index = io.open(output_file..'_index','w')
+      if not file_cache or not file_cache_index then
          return false
       end
-      filehndl:write(config.cache_file_head..'='..source_url,'\n')
+      list_epg_cache_index[output_file] = {  }
+      file_cache:write(config.cache_file_head..'='..source_url,'\n')
       local fmts = '%s "%s" %s %s %s "%s" "%s"\n'
-      for name,val in pairs(source_table) do
+      for name,val in pairs(cache_table) do
           for _,x in ipairs(val) do
-              filehndl:write(fmts:format(name,x.name,x.start,x.stop,
-                                             x.zone,x.title,x.desc))
+             local str = fmts:format(name,x.name,x.start,x.stop,
+                                          x.zone,x.title,x.desc)
+            if not currname then
+                local offset = file_cache:seek('cur')
+                currname = name
+                list_epg_cache_index[output_file][name] = { }
+                file_cache_index:write(name,', ',offset,', ')
+                list_epg_cache_index[output_file][name].from = offset
+             end
+
+             if currname ~= name then
+                local offset = file_cache:seek('cur')
+                file_cache_index:write(offset,'\n')
+                list_epg_cache_index[output_file][currname].to = offset
+                currname = name
+                list_epg_cache_index[output_file][name] = { }
+                list_epg_cache_index[output_file][name].from = offset
+                file_cache_index:write(name,', ',offset,', ')
+             end
+
+             file_cache:write(str)
           end
       end
-      filehndl:flush()
-      filehndl:close()
+      local offset = file_cache:seek('cur')
+      file_cache_index:write(offset,'\n')
+      list_epg_cache_index[output_file][currname].to = offset
+
+      file_cache:flush()
+      file_cache:close()
+
+      file_cache_index:flush()
+      file_cache_index:close()
+
       return true
 end
 -------------------------------------------------------------------------------
@@ -1257,15 +1333,97 @@ local function parse_epg_data(data)
    return programme
 end
 -------------------------------------------------------------------------------
--- Get EPG programms data from prepared cache file
+-- Generate index file from EPG cache file for first start in new default
+-- cache mode, becouse old users no have index file but have cache file
+-- if not generate user get message 'No have TV program for this channel'
+-- but maybe have actual EPG tv data, Im hope new mode just 'work in the box'
+-- this function call once for old users or if index file deleted for example
 -------------------------------------------------------------------------------
-local function load_epg_cache_from_file(source_file)
+local function generate_cache_index_from_file(cache_filename)
+     local currname = nil
+     local file_cache = io.open(cache_filename,'r')
+     local file_cache_index = io.open(cache_filename..'_index','w')
+     if not file_cache or not file_cache_index then
+        return false
+     end
+     list_epg_cache_index[cache_filename] = {  }
+     local fmts = '(.-)%s"(.-)"%s(.-)%s(.-)%s(%d+)%s"(.-)"%s"(.-)"$'
+     for line in file_cache:lines() do
+         local channel,name,start,stop,zone,title,desc = line:match(fmts)
+         if channel and name and start and stop and zone and title and desc then
+            name = channel
+            if not currname then
+               local offset = file_cache:seek('cur') - #line - 1
+               currname = name
+               list_epg_cache_index[cache_filename][name] = { }
+               file_cache_index:write(name,', ',offset,', ')
+               list_epg_cache_index[cache_filename][name].from = offset
+            end
+
+            if currname ~= name then
+               local offset = file_cache:seek('cur') - #line - 1
+               file_cache_index:write(offset,'\n')
+               list_epg_cache_index[cache_filename][currname].to = offset
+               currname = name
+               list_epg_cache_index[cache_filename][name] = { }
+               list_epg_cache_index[cache_filename][name].from = offset
+               file_cache_index:write(name,', ',offset,', ')
+            end
+         end
+     end
+
+     local offset = file_cache:seek('cur')
+     file_cache_index:write(offset,'\n')
+     list_epg_cache_index[cache_filename][currname].to = offset
+
+     file_cache:close()
+     file_cache_index:close()
+     return true
+end
+-------------------------------------------------------------------------------
+-- Get full or slice EPG programms data from prepared cache file
+-- 'from' and 'to' is offsets in bytes for get slice data by cache index file
+-------------------------------------------------------------------------------
+local function load_epg_cache_from_file(source_file,from,to)
      if not source_file then
         return nil
      end
+     ---
+     local iterator = function(filename)
+         return io.lines(filename)
+     end
+     -- if have 'from' and 'to' we get slice data
+     -- create virtual file and swap original
+     -- filename to virtual file_descriptor with tv data slice
+     if from and to then
+        source_file = io.open(source_file)
+        if not source_file then
+           return nil
+        end
+        source_file:seek('set',from)
+        local size = to - from
+        if size <= 0 then
+           mp_msg.error('EPGTV: bad cache offset size')
+           return nil
+        end
+        local data = source_file:read(size)
+        if not data then
+           mp_msg.error('EPGTV: fail get cache data from offset range')
+           return nil
+        end
+        source_file:close()
+        source_file = io.tmpfile()
+        source_file:write(data)
+        source_file:seek('set')
+        ---
+        iterator = function(file_descriptor)
+            return file_descriptor:lines()
+        end
+     end
+     ---
      local data = nil
      local fmts = '(.-)%s"(.-)"%s(.-)%s(.-)%s(%d+)%s"(.-)"%s"(.-)"$'
-     for line in io.lines(source_file) do
+     for line in iterator(source_file) do
          local channel,name,start,stop,zone,title,desc = line:match(fmts)
          if channel and name and start and stop and zone and title and desc then
             if not data then
@@ -1287,6 +1445,9 @@ local function load_epg_cache_from_file(source_file)
                data[data[channel][#data[channel]].name] = data[channel]
             end
          end
+     end
+     if type(source_file) == 'userdata' then
+        source_file:close()
      end
      return data
 end
@@ -1316,24 +1477,37 @@ local function get_epg_data(force_download)
               end
               if data then
                  message(msg_text.parse_tv_program)
-                 local tab = parse_epg_data(data)
-                 if not tab then
+                 local cache = parse_epg_data(data)
+                 if not cache then
                     message(msg_text.failed_get_data_from..' '..url)
                     return
                  end
-                 list_epg_cache[filename] = tab
+                 list_epg_cache[filename] = cache
                  message(msg_text.save_tv_to_cache)
                  save_epg_cache_to_file(list_epg_cache[filename],filename,url)
               else
                  message(msg_text.failed_get_data_from..' '..url)
               end
            elseif not list_epg_cache[filename] then
-             message(msg_text.load_tv_cache..' '..fileshort)
-             local tab = load_epg_cache_from_file(filename)
-             if tab then
-                list_epg_cache[filename] = tab
-             else
-                message(msg_text.failed_get_data_from..' '..fileshort)
+             -- load all cache in memory
+             if config.all_cache_in_memory  then
+                message(msg_text.load_tv_cache..' '..fileshort)
+                local cache = load_epg_cache_from_file(filename)
+                if cache then
+                   list_epg_cache[filename] = cache
+                else
+                   message(msg_text.failed_get_data_from..' '..fileshort)
+                end
+             else -- load cache index file instead cache file
+                 message(msg_text.load_tv_cache_index..' '..fileshort..'_index')
+                 local index = load_epg_cache_index_from_file(filename..'_index')
+                 if index then
+                    list_epg_cache_index[filename] = index
+                 else
+                    message(msg_text.failed_get_data_from..' '..fileshort..'_index')
+                    message(msg_text.generate_cache_index..' '..fileshort..'_index')
+                    generate_cache_index_from_file(filename)
+                 end
              end
            else
                 message(msg_text.cache_allready_loaded)
@@ -1433,37 +1607,37 @@ local function get_tv_programm(el,channel,mode)
                                        config.title_color,n.title)
            end
            -- inject programm description beetwen title and upcoming programms
-		   if not mode_light then
-			   local fmts_description =
-			   '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N\\N'
-			   now.title = fmts_description:format(now.title,
-												   config.description_size,
-												   config.description_color,n.desc)
-			end
+           if not mode_light then
+               local fmts_description =
+               '%s{\\a5\\q0\\bord2\\fs%s\\b1\\1c&%s&\\3c&000000&} %s\\N\\N'
+               now.title = fmts_description:format(now.title,
+                                                   config.description_size,
+                                                   config.description_color,n.desc)
+            end
 
         elseif progstart > today_long  then
-		   if not mode_light then
-				local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s'..
-								' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
-				-- set upcoming channel programmes
-				local  prog = fmts:format(config.upcoming_time_size,
-											config.upcoming_color,start,stop,
-											config.upcoming_title_size,
-											n.title,
-											config.upcoming_description_color,
-											config.upcoming_description_size,
-											n.desc:gsub('\n',''))
+           if not mode_light then
+                local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s'..
+                                ' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
+                -- set upcoming channel programmes
+                local  prog = fmts:format(config.upcoming_time_size,
+                                            config.upcoming_color,start,stop,
+                                            config.upcoming_title_size,
+                                            n.title,
+                                            config.upcoming_description_color,
+                                            config.upcoming_description_size,
+                                            n.desc:gsub('\n',''))
 
-				if progdate == tomorrow then
-					local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
-					program_next_day[#program_next_day+1] =
-					fmts_tomorrow:format(config.tomorrow_prefix_size,
-										config.tomorrow_prefix_color,
-										msg_text.tomorrow,prog)
-				else
-					program[#program+1] = prog
-				end
-		   else  -- light mode
+                if progdate == tomorrow then
+                    local fmts_tomorrow = '{\\b1\\be\\fs%s\\1c&H%s&}%s %s'
+                    program_next_day[#program_next_day+1] =
+                    fmts_tomorrow:format(config.tomorrow_prefix_size,
+                                        config.tomorrow_prefix_color,
+                                        msg_text.tomorrow,prog)
+                else
+                    program[#program+1] = prog
+                end
+           else  -- light mode
                local fmts_light = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s\\N'
                local prog = fmts_light:format(config.upcoming_time_size,
                                               config.upcoming_color,start,stop,
@@ -1485,7 +1659,7 @@ local function get_tv_programm(el,channel,mode)
   table.insert(program,1,"") -- this empty element for correct scroll down
   table.insert(program,2,now.title) -- first empty element, next curr program
   for _,prog in ipairs(program_next_day) do
-	table.insert(program,prog)
+    table.insert(program,prog)
   end
   if #program == 0 then
      return nil
@@ -1522,44 +1696,50 @@ local function show_epg(mode,show_type)
      timer:kill()
      timer = nil
   end
-  local data
-  local channelID
-  -- try find from normal tvg-id channel name
-  local channel   = normalize(mp.get_property('media-title'))
-  channelID = list_epg_ids[channel]
-  if channelID and list_epg_cache then
-     for _,tvdata in pairs(list_epg_cache) do
-         data = get_tv_programm(tvdata,channelID,mode)
-         if data then
-            break
-         end
+  local data = nil
+  local search_variants = {  }
+  -- tv id     | try find from normal tvg-id channel name
+  search_variants[1] = list_epg_ids[normalize(mp.get_property('media-title'))]
+  -- tv title  | try find from media title stream url, if no have tvg-id
+  search_variants[2] = list_url_ids[mp.get_property('stream-open-filename')]
+  -- tv stream | try find from stream url slice, if no have other info
+  search_variants[3] = (mp.get_property('stream-open-filename') or ''):match('[^/]+$')
+  -------------------------------------------------
+  -- use index file cache for dynamicly EPG load --
+  -------------------------------------------------
+  if not config.all_cache_in_memory then
+     for _,channelID in ipairs(search_variants) do
+        if channelID then
+           for filename,index_cache in pairs(list_epg_cache_index) do
+               if index_cache[channelID] then
+                  local from = index_cache[channelID].from
+                  local to = index_cache[channelID].to
+                  if from and to then
+                     local tvdata = load_epg_cache_from_file(filename,from,to)
+                     data = get_tv_programm(tvdata,channelID,mode)
+                  end
+                  if data then
+                     break
+                  end
+               end
+           end
+        end
      end
   end
-  -- try find from media title, if no have tvg-id
-  if not data then
-     local stream = mp.get_property('stream-open-filename')
-     channelID = list_url_ids[stream]
-     if channelID and list_epg_cache then
-        for _,tvdata in pairs(list_epg_cache) do
-            data = get_tv_programm(tvdata,channelID,mode)
-            if data then
-               break
-            end
+  -------------------------------------------------
+  --      use full file preloaded EPG cache      --
+  -------------------------------------------------
+  if config.all_cache_in_memory then
+     for _,channelID in ipairs(search_variants) do
+        if channelID and list_epg_cache then
+           for _,tvdata in pairs(list_epg_cache) do
+               data = get_tv_programm(tvdata,channelID,mode)
+               if data then
+                  break
+               end
+           end
         end
-    end
-  end
-  -- try find from stream url slice, if no have other info
-  if not data then
-     local slice = mp.get_property('stream-open-filename') or ''
-     channelID = slice:match('[^/]+$')
-     if channelID and list_epg_cache then
-        for _,tvdata in pairs(list_epg_cache) do
-            data = get_tv_programm(tvdata,channelID,mode)
-            if data then
-               break
-            end
-        end
-    end
+     end
   end
   ---
   local mode_manual = 1
@@ -1572,7 +1752,7 @@ local function show_epg(mode,show_type)
      detail_level = config.manual_show_details + 1
   end
 
-  if not channelID or not data then
+  if not data then
      local fmts = '{\\an8\\fs%s\\b1\\1c&H%s&}%s'
      ov.data = fmts:format(config.no_epg_size,
                            config.no_epg_color,
@@ -1589,9 +1769,9 @@ local function show_epg(mode,show_type)
         ov.data = program_concat(table_slice)
      elseif mode == mode_auto then
         ov.data = program_concat(data)
-	 elseif mode == mode_light then
-		local light_slice = { data[2], data[3] }
-		ov.data = program_concat(light_slice)
+     elseif mode == mode_light then
+        local light_slice = { data[2], data[3] }
+        ov.data = program_concat(light_slice)
      else
         ov.data = program_concat(data)
      end
@@ -1678,22 +1858,41 @@ local function update_current_epg()
 end
 -------------------------------------------------------------------------------
 -- For find channels use all EPG data from all cached sources
+-- If use cache index, in reality cache not loaded but we can
+-- search in cache without full loading large EPG cache files
 -------------------------------------------------------------------------------
 local function load_all_epg_cache()
     local filelist = utils.readdir(config.epg_tmp_dir,'files')
     if filelist and #filelist > 0 then
        for _,file in pairs(filelist) do
            local fullpath = utils.join_path(config.epg_tmp_dir,file)
-           if not list_epg_cache[fullpath] then
-              message(msg_text.load_tv_cache..' '..file)
-              local tab = load_epg_cache_from_file(fullpath)
-              if tab then
-                 list_epg_cache[fullpath] = tab
+           -- force load all EPG cache in to RAM
+           if config.all_cache_in_memory and not fullpath:find('_index$') then
+              if not list_epg_cache[fullpath] then
+                 message(msg_text.load_tv_cache..' '..file)
+                 local cache = load_epg_cache_from_file(fullpath)
+                 if cache then
+                    list_epg_cache[fullpath] = cache
+                 else
+                    message(msg_text.skip..' '..file)
+                 end
               else
-                message(msg_text.skip..' '..file)
+                  message(msg_text.cache_allready_loaded)
               end
-           else
-               message(msg_text.cache_allready_loaded)
+           end
+           -- force load only index of EPG cache in to RAM
+           if not config.all_cache_in_memory and fullpath:find('_index$') then
+              if not list_epg_cache_index[fullpath] then
+                 message(msg_text.load_tv_cache_index..' '..file..'_index')
+                 local index = load_epg_cache_index_from_file(fullpath..'_index')
+                 if index then
+                    list_epg_cache_index[fullpath] = index
+                 else
+                    message(msg_text.skip..' '..file..'_index')
+                 end
+              else
+                  message(msg_text.cache_index_allready_loaded)
+              end
            end
        end
     else
@@ -1831,7 +2030,7 @@ mp.add_periodic_timer(config.update_progress_duration,function()
          if curr_program_list[id] then
             local mode_manual  = 1
             local mode_auto    = 2
-			local mode_light   = 3
+            local mode_light   = 3
 
             local detail_level
             if curr_show_type == 'auto' then
@@ -1852,9 +2051,9 @@ mp.add_periodic_timer(config.update_progress_duration,function()
                   ov.data = program_concat(table_slice)
                elseif curr_show_mode == mode_auto then
                   ov.data = program_concat(curr_program_list)
-			   elseif curr_show_mode == mode_light then
-				  local light_slice = { curr_program_list[2], curr_program_list[3] }
-				  ov.data = program_concat(light_slice)
+               elseif curr_show_mode == mode_light then
+                  local light_slice = { curr_program_list[2], curr_program_list[3] }
+                  ov.data = program_concat(light_slice)
                else
                   ov.data = program_concat(curr_program_list)
                end

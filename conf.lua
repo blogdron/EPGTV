@@ -99,6 +99,12 @@ local config =
    top_title_playinfo_style=1, -- 1 -- time + percent in right
                                -- 2 -- time + percent in left
                                -- 3 -- time + percent under top title
+   --------------------------
+   --   cache load modes   --
+   --------------------------
+   all_cache_in_memory = false, -- on/off store all EPG cache in RAM
+                                -- false - if you EPG large, use with index file
+                                -- true  - if you EPG small, use just cache file
 }
 -------------------------------------------------------------------------------
 return config -- do not delete this line

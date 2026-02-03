@@ -10,8 +10,8 @@ After save cache, show TV program information for twoo days if available.
 If available `EPGTV` show TV programs descriptions. First start can be slowly
 becouse cache not prepared, other starts faster and reuse cache.
 
-  * Worked on `mpv 0.38.0`
-  * Worked on `GNU/Linux Debian 12`
+  * Worked on `mpv 0.38,0.39,0.40,0.41`
+  * Worked on `GNU/Linux Debian 12,13,14`
   * Worked on `Windows 7` (See Windows specific info in end of README )
 
 ## Alternative
@@ -69,6 +69,17 @@ you need to **update the cache manually** by pressing `u` if the `EPG` data sour
 then the new cache will be relevant and all data will be displayed, usually `EPG` data stores
 information for several days in advance, but this is not always the case.
 
+The cache can operate in two modes: fully loaded into memory, or dynamically   
+loading data for only the selected TV channel. By default, the second option is   
+currently used, as the cache can be measured in gigabytes.  
+Instead of loading the entire cache into memory, a small index file is loaded that  
+references data slices within the larger cache file and simply reads the required chunk  
+of data for parsing and display when needed. This eliminates the need to wait for   
+the entire cache to load, especially if it is large. This behavior can be changed in the config.
+
+In some cases, when a cache file exists but not a cache index file, a one-time   
+cache index generation will be required. This will happen automatically and once.  
+Subsequent opening and display of TV program guides will be SIGNIFICANTLY faster.  
 
 ## Configuration
 
