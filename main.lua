@@ -107,7 +107,8 @@ function SLAXML:parse(xml,options)
     local anyElement = false
 
     local utf8markers = { {0x7FF,192}, {0xFFFF,224}, {0x1FFFFF,240} }
-    local function utf8(decimal) -- convert unicode code point to utf-8 encoded character string
+    -- convert unicode code point to utf-8 encoded character string
+    local function utf8(decimal)
         if decimal<128 then return char(decimal) end
         local charbytes = {}
         for bytes,vals in ipairs(utf8markers) do
@@ -122,9 +123,21 @@ function SLAXML:parse(xml,options)
             end
         end
     end
-    local entityMap  = { ["lt"]="<", ["gt"]=">", ["amp"]="&", ["quot"]='"', ["apos"]="'" }
-    local entitySwap = function(orig,n,s) return entityMap[s] or n=="#" and utf8(tonumber('0'..s)) or orig end
-    local function unescape(str) return gsub( str, '(&(#?)([%d%a]+);)', entitySwap ) end
+    local entityMap =
+    {
+        ["lt"]="<",
+        ["gt"]=">",
+        ["amp"]="&",
+        ["quot"]='"',
+        ["apos"]="'"
+    }
+    local entitySwap = function(orig,n,s)
+        return entityMap[s] or n=="#" and utf8(tonumber('0'..s)) or orig
+    end
+    ---
+    local function unescape(str)
+        return gsub( str, '(&(#?)([%d%a]+);)', entitySwap )
+    end
 
     local function finishText()
         if first>textStart and self._call.text then
@@ -139,7 +152,12 @@ function SLAXML:parse(xml,options)
     end
 
     local function findPI()
-        first, last, match1, match2 = find( xml, '^<%?([:%a_][:%w_.-]*) ?(.-)%?>', pos )
+
+        first,
+        last,
+        match1,
+        match2 = find( xml, '^<%?([:%a_][:%w_.-]*) ?(.-)%?>', pos )
+
         if first then
             finishText()
             if self._call.pi then self._call.pi(match1,match2) end
@@ -163,7 +181,11 @@ function SLAXML:parse(xml,options)
     local function nsForPrefix(prefix)
         -- http://www.w3.org/TR/xml-names/#ns-decl
         if prefix=='xml' then return 'http://www.w3.org/XML/1998/namespace' end
-        for i=#nsStack,1,-1 do if nsStack[i][prefix] then return nsStack[i][prefix] end end
+        for i=#nsStack,1,-1 do
+            if nsStack[i][prefix] then
+                return nsStack[i][prefix]
+            end
+        end
         error(("Cannot find namespace for prefix %s"):format(prefix))
     end
 
@@ -171,8 +193,10 @@ function SLAXML:parse(xml,options)
         anyElement = true
         first, last, match1 = find( xml, '^<([%a_][%w_.-]*)', pos )
         if first then
-            currentElement[2] = nil -- reset the nsURI, since this table is re-used
-            currentElement[3] = nil -- reset the nsPrefix, since this table is re-used
+            -- reset the nsURI, since this table is re-used
+            currentElement[2] = nil
+            -- reset the nsPrefix, since this table is re-used
+            currentElement[3] = nil
             finishText()
             pos = last+1
             first,last,match2 = find(xml, '^:([%a_][%w_.-]*)', pos )
@@ -183,7 +207,12 @@ function SLAXML:parse(xml,options)
                 pos = last+1
             else
                 currentElement[1] = match1
-                for i=#nsStack,1,-1 do if nsStack[i]['!'] then currentElement[2] = nsStack[i]['!']; break end end
+                for i=#nsStack,1,-1 do
+                    if nsStack[i]['!'] then
+                        currentElement[2] = nsStack[i]['!'];
+                        break
+                    end
+                end
             end
             currentAttributeCt = 0
             push(nsStack,{})
@@ -195,12 +224,14 @@ function SLAXML:parse(xml,options)
         first, last, match1 = find( xml, '^%s+([:%a_][:%w_.-]*)%s*=%s*', pos )
         if first then
             pos2 = last+1
-            first, last, match2 = find( xml, '^"([^<"]*)"', pos2 ) -- FIXME: disallow non-entity ampersands
+            -- FIXME: disallow non-entity ampersands
+            first, last, match2 = find( xml, '^"([^<"]*)"', pos2 )
             if first then
                 pos = last+1
                 match2 = unescape(match2)
             else
-                first, last, match2 = find( xml, "^'([^<']*)'", pos2 ) -- FIXME: disallow non-entity ampersands
+                -- FIXME: disallow non-entity ampersands
+                first, last, match2 = find( xml, "^'([^<']*)'", pos2 )
                 if first then
                     pos = last+1
                     match2 = unescape(match2)
@@ -246,41 +277,61 @@ function SLAXML:parse(xml,options)
             state = "text"
             pos = last+1
             textStart = pos
-
-            -- Resolve namespace prefixes AFTER all new/redefined prefixes have been parsed
-            if currentElement[3] then currentElement[2] = nsForPrefix(currentElement[3])    end
-            if self._call.startElement then self._call.startElement(unpack(currentElement)) end
+            -- Resolve namespace prefixes AFTER all
+            -- new/redefined prefixes have been parsed
+            if currentElement[3] then
+               currentElement[2] = nsForPrefix(currentElement[3])
+            end
+            if self._call.startElement then
+               self._call.startElement(unpack(currentElement))
+            end
             if self._call.attribute then
-                for i=1,currentAttributeCt do
-                    if currentAttributes[i][4] then currentAttributes[i][3] = nsForPrefix(currentAttributes[i][4]) end
-                    self._call.attribute(unpack(currentAttributes[i]))
-                end
+               for i=1,currentAttributeCt do
+                   if currentAttributes[i][4] then
+                      currentAttributes[i][3] = nsForPrefix(currentAttributes[i][4])
+                   end
+                   self._call.attribute(unpack(currentAttributes[i]))
+               end
             end
 
             if match1=="/" then
                 pop(nsStack)
-                if self._call.closeElement then self._call.closeElement(unpack(currentElement)) end
+                if self._call.closeElement then
+                   self._call.closeElement(unpack(currentElement))
+                end
             end
             return true
         end
     end
 
     local function findElementClose()
-        first, last, match1, match2 = find( xml, '^</([%a_][%w_.-]*)%s*>', pos )
+        first, last, match1, match2 = find( xml, '^</([%a_][%w_.-]*)%s*>', pos)
         if first then
-            nsURI = nil
-            for i=#nsStack,1,-1 do if nsStack[i]['!'] then nsURI = nsStack[i]['!']; break end end
+           nsURI = nil
+           for i=#nsStack,1,-1 do
+               if nsStack[i]['!'] then
+                  nsURI = nsStack[i]['!'];
+                  break
+              end
+           end
         else
-            first, last, match2, match1 = find( xml, '^</([%a_][%w_.-]*):([%a_][%w_.-]*)%s*>', pos )
-            if first then nsURI = nsForPrefix(match2) end
+            first,
+            last,
+            match2,
+            match1 = find( xml, '^</([%a_][%w_.-]*):([%a_][%w_.-]*)%s*>', pos)
+            if first then
+               nsURI = nsForPrefix(match2)
+            end
         end
         if first then
-            finishText()
-            if self._call.closeElement then self._call.closeElement(match1,nsURI) end
-            pos = last+1
-            textStart = pos
-            pop(nsStack)
-            return true
+           finishText()
+           if self._call.closeElement then
+              self._call.closeElement(match1,nsURI)
+           end
+           pos = last+1
+           textStart = pos
+           pop(nsStack)
+           return true
         end
     end
 
@@ -297,7 +348,7 @@ function SLAXML:parse(xml,options)
         elseif state=="attributes" then
             if not findAttribute() then
                 if not closeElement() then
-                    error("Was in an element and couldn't find attributes or the close.")
+                   error("Was in an element and couldn't find attributes or the close.")
                 end
             end
         end
@@ -567,15 +618,19 @@ local program_is_visible = false
 local curr_show_mode = 2
 local curr_show_type = 'auto'
 -------------------------------------------------------------------------------
-local list_epg_ids = {   }
-local ihas_epg_ids = false
+-- For search tv programme by tvg-id in EPG data from tv media title in M3U
+local list_epg_ids = {   } -- list_epg_ids[normalized_tv_media_title] = tvg-id
+local ihas_epg_ids = false -- init in M3U parcer (get_epg_ids_from_m3u)
 -------------------------
-local list_url_ids = {   }
-local ihas_url_ids = false
+-- For search tv programme in EPG data by media title from associated stream url
+local list_url_ids = {   } -- list_url_ids[stream_url] = normalized_tv_media_title
+local ihas_url_ids = false -- init in M3U parcer (get_epg_ids_from_m3u)
 --------------------------
-local list_epg_url = {   }
-local ihas_epg_url = false
-local list_epg_tab = {   }
+-- For store url-tvg from M3U, this is link to EPG xml or archive for download
+local list_epg_url = {   } -- list_epg_url[index+1] = url_to_epg_xml_archive
+local ihas_epg_url = false -- init in M3U parcer (get_epg_url_from_m3u)
+-- Prerepared EPG cache data for search tv programms
+local list_epg_tab = {   } -- init (show_epg),(get_epg_data),(get_all_epg_cache)
 -------------------------------------------------------------------------------
 local function clear_epgtv_state()
    list_epg_ids = {   }
