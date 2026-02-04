@@ -1276,23 +1276,23 @@ local function parse_epg_data(data)
                  if not programme[channel] then
                     programme[channel] = { }
                  end
-                    programme[channel][#programme[channel]+1] =
-                    {
-                       title = title;
-                        name = channels[channel] or '#';
-                       start = start:match('(%d+)%s-');  -- del timezone
-                        stop = stop:match('(%d+)%s-');   -- del timezone
-                        desc = desc;
-                        zone = get_time_zone(start);
-                    }
-                    if channels[channel] then
-                       programme[channels[channel]] = programme[channel]
-                    end
-                    title   = nil
-                    start   = nil
-                    stop    = nil
-                    desc    = nil
-                    channel = nil
+                 programme[channel][#programme[channel]+1] =
+                 {
+                    title = title;
+                     name = channels[channel] or '#';
+                    start = start:match('(%d+)%s-');  -- del timezone
+                     stop = stop:match('(%d+)%s-');   -- del timezone
+                     desc = desc;
+                     zone = get_time_zone(start);
+                 }
+                 if channels[channel] then
+                    programme[channels[channel]] = programme[channel]
+                 end
+                 title   = nil
+                 start   = nil
+                 stop    = nil
+                 desc    = nil
+                 channel = nil
               end
               is_programme = false
            end
@@ -1340,7 +1340,7 @@ end
 -- this function call once for old users or if index file deleted for example
 -------------------------------------------------------------------------------
 local function generate_cache_index_from_file(cache_filename)
-     local currname = nil
+     local curr_channel = nil
      local file_cache = io.open(cache_filename,'r')
      local file_cache_index = io.open(cache_filename..'_index','w')
      if not file_cache or not file_cache_index then
@@ -1351,30 +1351,31 @@ local function generate_cache_index_from_file(cache_filename)
      for line in file_cache:lines() do
          local channel,name,start,stop,zone,title,desc = line:match(fmts)
          if channel and name and start and stop and zone and title and desc then
-            name = channel
-            if not currname then
+            if not curr_channel then
                local offset = file_cache:seek('cur') - #line - 1
-               currname = name
-               list_epg_cache_index[cache_filename][name] = { }
-               file_cache_index:write(name,', ',offset,', ')
-               list_epg_cache_index[cache_filename][name].from = offset
+               curr_channel = channel
+               list_epg_cache_index[cache_filename][channel] = { }
+               file_cache_index:write(channel,', ',offset,', ')
+               list_epg_cache_index[cache_filename][channel].from = offset
             end
 
-            if currname ~= name then
+            if curr_channel ~= channel then
                local offset = file_cache:seek('cur') - #line - 1
                file_cache_index:write(offset,'\n')
-               list_epg_cache_index[cache_filename][currname].to = offset
-               currname = name
-               list_epg_cache_index[cache_filename][name] = { }
-               list_epg_cache_index[cache_filename][name].from = offset
-               file_cache_index:write(name,', ',offset,', ')
+               list_epg_cache_index[cache_filename][curr_channel].to = offset
+               curr_channel = channel
+               list_epg_cache_index[cache_filename][channel] = { }
+               list_epg_cache_index[cache_filename][channel].from = offset
+               file_cache_index:write(channel,', ',offset,', ')
             end
          end
      end
 
-     local offset = file_cache:seek('cur')
-     file_cache_index:write(offset,'\n')
-     list_epg_cache_index[cache_filename][currname].to = offset
+     if curr_channel then
+        local offset = file_cache:seek('cur')
+        file_cache_index:write(offset,'\n')
+        list_epg_cache_index[cache_filename][curr_channel].to = offset
+     end
 
      file_cache:close()
      file_cache_index:close()
@@ -1467,7 +1468,7 @@ local function get_epg_data(force_download)
            local fileshort = filename:match('.+/(.-)$')
            if not check_epg_cache(url) or force_download then
               message(msg_text.download_tv_program..' '..url)
-              local data;
+              local data
               if url:find('%.gz$') or url:find('%.zip$') then
                  download_to_file(url,filename)
                  message(msg_text.unpack_tv_program)
@@ -1475,16 +1476,28 @@ local function get_epg_data(force_download)
               else
                  data = download_to_data(url)
               end
+              --
               if data then
                  message(msg_text.parse_tv_program)
                  local cache = parse_epg_data(data)
+
+                 data = nil -- force clear unused data
+                 collectgarbage('collect')
+
                  if not cache then
                     message(msg_text.failed_get_data_from..' '..url)
                     return
                  end
-                 list_epg_cache[filename] = cache
+
                  message(msg_text.save_tv_to_cache)
-                 save_epg_cache_to_file(list_epg_cache[filename],filename,url)
+                 save_epg_cache_to_file(cache,filename,url)
+
+                 if config.all_cache_in_memory then
+                    list_epg_cache[filename] = cache
+                 else
+                    cache = nil -- force clear unused data
+                    collectgarbage('collect')
+                 end
               else
                  message(msg_text.failed_get_data_from..' '..url)
               end
