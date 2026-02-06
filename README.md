@@ -59,7 +59,7 @@ cd $HOME/.config/mpv/scripts/EPGTV && git pull
  * `y` -  Show TV information like `h` but in toggle mode show/hide
  * `n` -  Scroll down of TV information for today and tomorrow
  * `u` -  Upgrade EPG TV data for current playlist (other cache unloaded)
- * `g` -  Preload all EPG TV cache for find TV programs (can be usefull)
+ * `g` -  Force preload all EPG TV cache for find TV programs in any playlist (can be usefull)
  * `esc` - Close TV information
 
 `EPGTV` uses a cache for faster operation, it is automatically created
@@ -69,17 +69,17 @@ you need to **update the cache manually** by pressing `u` if the `EPG` data sour
 then the new cache will be relevant and all data will be displayed, usually `EPG` data stores
 information for several days in advance, but this is not always the case.
 
-The cache can operate in two modes: fully loaded into memory, or dynamically   
-loading data for only the selected TV channel. By default, the second option is   
-currently used, as the cache can be measured in gigabytes.  
-Instead of loading the entire cache into memory, a small index file is loaded that  
-references data slices within the larger cache file and simply reads the required chunk  
-of data for parsing and display when needed. This eliminates the need to wait for   
+The cache can operate in two modes: fully loaded into memory, or dynamically
+loading data for only the selected TV channel. By default, the second option is
+currently used, as the cache can be measured in gigabytes.
+Instead of loading the entire cache into memory, a small index file is loaded that
+references data slices within the larger cache file and simply reads the required chunk
+of data for parsing and display when needed. This eliminates the need to wait for
 the entire cache to load, especially if it is large. This behavior can be changed in the config.
 
-In some cases, when a cache file exists but not a cache index file, a one-time   
-cache index generation will be required. This will happen automatically and once.  
-Subsequent opening and display of TV program guides will be SIGNIFICANTLY faster.  
+In some cases, when a cache file exists but not a cache index file, a one-time
+cache index generation will be required. This will happen automatically and once.
+Subsequent opening and display of TV program guides will be SIGNIFICANTLY faster.
 
 ## Configuration
 
