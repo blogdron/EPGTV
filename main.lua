@@ -1,7 +1,5 @@
 --------------------------------------------------------------------------------
 --   libASS subtitle format see: https://aegisub.org/docs/latest/ass_tags/   --
---------------------------------------------------------------------------------
-
 -------------------------------------------------------------------------------
 --                        EPGTV - Fork of mpvEPG v0.3                        --
 --        Lua script for mpv parses XMLTV data and displays scheduling       --
@@ -17,33 +15,33 @@
 --               Copyright © 2025 Luca Bianchi; MIT Licensed                 --
 --             See https://github.com/blogdron/EPGTV for details.            --
 -------------------------------------------------------------------------------
---                             MIT License
---
---Permission is hereby granted, free of charge, to any person obtaining a copy
---of this software and associated documentation files (the "Software"), to deal
---in the Software without restriction, including without limitation the rights
---to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
---copies of the Software, and to permit persons to whom the Software is
---furnished to do so, subject to the following conditions:
---
---The above copyright notice and this permission notice shall be included in all
---copies or substantial portions of the Software.
---
---THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
---IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
---FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
---AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
---LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
---OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
---SOFTWARE.
+--                             MIT License                                   --
+--                                                                           --
+-- Permission is hereby granted, free of charge, to any person obtaining a   --
+-- copy of this software and associated documentation files (the "Software"),--
+-- to deal in the Software without restriction, including without limitation --
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,  --
+-- and/or sell copies of the Software, and to permit persons to whom the     --
+-- Software is furnished to do so, subject to the following conditions:      --
+--                                                                           --
+-- The above copyright notice and this permission notice shall be included   --
+-- in all copies or substantial portions of the Software.                    --
+--                                                                           --
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS   --
+-- OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF                --
+-- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.    --
+-- IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY      --
+-- CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT --
+-- OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR  --
+-- THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
 ---========================== SLAXML PART START ============================---
 -------------------------------------------------------------------------------
---  v0.8 Copyright © 2013-2018 Gavin Kistner <!@phrogz.net>; MIT Licensed
---           See http://github.com/Phrogz/SLAXML for details.
---                Copyright (c) 2013-2018 Gavin Kistner
+--  v0.8 Copyright © 2013-2018 Gavin Kistner <!@phrogz.net>; MIT Licensed    --
+--           See http://github.com/Phrogz/SLAXML for details.                --
+--                Copyright (c) 2013-2018 Gavin Kistner                      --
 -------------------------------------------------------------------------------
 local SLAXML = {
     VERSION = "0.8",
@@ -150,9 +148,9 @@ function SLAXML:parse(xml,options)
             if text then self._call.text(unescape(text),false) end
         end
     end
-
+    -- disabled for EPGTV, becouse unused
     local function findPI()
-
+     --[[
         first,
         last,
         match1,
@@ -165,9 +163,11 @@ function SLAXML:parse(xml,options)
             textStart = pos
             return true
         end
+        --]]
     end
-
+    -- disabled for, EPGTV becouse unused
     local function findComment()
+        --[[
         first, last, match1 = find( xml, '^<!%-%-(.-)%-%->', pos )
         if first then
             finishText()
@@ -176,6 +176,7 @@ function SLAXML:parse(xml,options)
             textStart = pos
             return true
         end
+        --]]
     end
 
     local function nsForPrefix(prefix)
@@ -259,8 +260,9 @@ function SLAXML:parse(xml,options)
             return true
         end
     end
-
+    -- disabled for EPGTV, becouse unused
     local function findCDATA()
+        --[[
         first, last, match1 = find( xml, '^<!%[CDATA%[(.-)%]%]>', pos )
         if first then
             finishText()
@@ -269,6 +271,7 @@ function SLAXML:parse(xml,options)
             textStart = pos
             return true
         end
+        --]]
     end
 
     local function closeElement()
@@ -525,6 +528,7 @@ local translates =
        skip_download     = 'Skip download';
        unpack_tv_program = 'Unpack TV program';
        parse_tv_program  = 'Parse TV program';
+       failed_parse_tv_program = "Failed parce TV program";
        save_tv_to_cache  = 'Save TV program cache';
        load_tv_cache     = 'Load TV cache';
        load_tv_cache_index = 'Load TV cache index';
@@ -540,7 +544,7 @@ local translates =
        no_have_tv_program= 'No have TV program for this channel';
        no_have_variable_linux   = "No have 'HOME' envilopment variable (Linux)";
        no_have_variable_windows = "No have 'LOCALAPPDATA' envilopment variable (Windows)";
-
+       no_have_url_to_update_epg   = "The playlist does not have an EPG update link";
     };
     ['it_IT.UTF-8'] =
     {
@@ -553,6 +557,7 @@ local translates =
        skip_download               = 'Download saltato';
        unpack_tv_program           = 'Estrazione del programma TV';
        parse_tv_program            = 'Analisi del programma TV';
+       failed_parse_tv_program     = "Analisi del programma TV non riuscita";
        save_tv_to_cache            = 'Salvataggio del programma TV nella cache';
        load_tv_cache               = 'Caricamento della cache TV';
        load_tv_cache_index         = 'Caricamento della cache TV indice';
@@ -568,7 +573,8 @@ local translates =
        no_have_tv_program          = 'Nessun programma TV disponibile per questo canale';
        no_have_variable_linux      = "Variabile d'ambiente 'HOME' non disponibile (Linux)";
        no_have_variable_windows    = "Variabile d'ambiente 'LOCALAPPDATA' non disponibile (Windows)";
-    };
+       no_have_url_to_update_epg   = "La playlist non ha un link per l'aggiornamento EPG";
+   };
     ['ru_RU.UTF-8'] =
     {
        no_desctiption    = 'Нет описания';
@@ -580,9 +586,10 @@ local translates =
        skip_download     = 'Пропуск загрузки';
        unpack_tv_program = 'Распаковка ТВ программ';
        parse_tv_program  = 'Разбор ТВ программ';
+       failed_parse_tv_program = "Не удалось разобрать ТВ программы";
        save_tv_to_cache  = 'Сохранение ТВ программ в кэш';
        load_tv_cache     = 'Загрузка кэша ТВ программ';
-       load_tv_cache_index = 'Загрузка интекса кэша ТВ программ';
+       load_tv_cache_index = 'Загрузка индекса кэша ТВ программ';
        generate_cache_index= 'Генерация индекса кэша ТВ программ';
        expired_cache     = 'Кэш устарел, обновление';
        tomorrow          = 'Завтра';
@@ -593,8 +600,9 @@ local translates =
        cache_index_allready_loaded = 'Индекс кэша уже загружен';
        no_have_cache     = 'Нет кэша для подгрузки';
        no_have_tv_program= 'Нет ТВ программы для этого канала';
-       no_have_variable_linux   = "Нет переменной окружения 'HOME' (Linux)";
-       no_have_variable_windows = "Нет переменной окружения 'LOCALAPPDATA' (Windows)";
+       no_have_variable_linux    = "Нет переменной окружения 'HOME' (Linux)";
+       no_have_variable_windows  = "Нет переменной окружения 'LOCALAPPDATA' (Windows)";
+       no_have_url_to_update_epg = "В плейлисте нет ссылки для обновления EPG";
     };
 }
 -------------------------------------------------------------------------------
@@ -636,28 +644,44 @@ local curr_show_type = 'auto'
 -- For search tv programme by tvg-id in EPG data from tv media title in M3U
 local list_epg_ids = {   } -- list_epg_ids[normalized_tv_media_title] = tvg-id
 local ihas_epg_ids = false -- init in M3U parcer (get_epg_ids_from_m3u)
--------------------------
+-------------------------------------------------------------------------------
 -- For search tv programme in EPG data by media title from associated stream url
 local list_url_ids = {   } -- list_url_ids[stream_url] = normalized_tv_media_title
 local ihas_url_ids = false -- init in M3U parcer (get_epg_ids_from_m3u)
---------------------------
+-------------------------------------------------------------------------------
 -- For store url-tvg from M3U, this is link to EPG xml or archive for download
 local list_epg_url = {   } -- list_epg_url[index+1] = url_to_epg_xml_archive
 local ihas_epg_url = false -- init in M3U parcer (get_epg_url_from_m3u)
+-------------------------------------------------------------------------------
+-- For search tv programme in EPG data by stream url as-is or slice patch
+-- if playlist no have media-title and no have tvg-id
+local list_url_stream = {   } -- list_url_stream[://bla/name.m3u8] = name.m3u8
+local ihas_url_stream = false -- list_url_stream[name.m3u8] = ://bla/name.m3u8
+-------------------------------------------------------------------------------
 -- Prerepared EPG cache data for search tv programms
-local list_epg_cache = {   } -- init (show_epg),(get_epg_data),(get_all_epg_cache)
+local list_epg_cache = { } -- init (show_epg),(get_epg_data),(get_all_epg_cache)
+-------------------------------------------------------------------------------
+-- Prepared EPG cache TV names aliaces for search by another name
+-- this table stored same data as list_epg_cache but use another keys from EPG
+-- display-name instead channel id for search from M3U media-title instead tvg-id
+local list_epg_cache_aliace = {  } -- init with list_epg_cache in same places
+-------------------------------------------------------------------------------
 -- Prepared EPG cache index file for low memory usage and not load full large
 -- EPG cache in to memory for exmple my EPG cache is 1.4 GB in memory its ~3GB
 -- index file store offsets for load selected TV channel from EPG as slice
-local list_epg_cache_index = {   }
+local list_epg_cache_index  = {   } -- init in (save_epg_cache_to_file)
+                                    -- init in (generate_cache_index_from_file)
 -------------------------------------------------------------------------------
 local function clear_epgtv_state()
-   list_epg_ids = {   }
-   ihas_epg_ids = false
-   list_epg_url = {   }
-   ihas_epg_url = false
-   list_epg_cache = {   }
-   list_epg_cache_index = {   }
+   list_epg_ids    = {   }
+   ihas_epg_ids    = false
+   list_epg_url    = {   }
+   ihas_epg_url    = false
+   list_url_stream = {   }
+   ihas_url_stream = false
+   list_epg_cache  = {   }
+   list_epg_cache_aliace = {   }
+   list_epg_cache_index  = {   }
    collectgarbage('collect')
 end
 -------------------------------------------------------------------------------
@@ -948,12 +972,14 @@ local function new_file_is_m3u()
       data = load_file_to_data(path,0,1024)
    end
    if not data then
-
       return false
    end
-   if data:find('#EXTINF') and
-      data:find('#EXTM3U') and
-      data:find('url%-tvg') then
+
+   if config.ignore_noepg_m3u and not data:find('url%-tvg') then
+      return false
+   end
+
+   if data:find('#EXTINF') and data:find('#EXTM3U') then
       return true
    end
    return false
@@ -1013,12 +1039,66 @@ local function normalize(s)
 end
 -------------------------------------------------------------------------------
 -- Try find tvg-id aka TV channels identificators in M3U playlist
+-- this is fundament for search, in ideal case we have tvg-id and
+-- media-title, we make list_epg_ids[media-title] = tvg-id, mpv give
+-- media-title from playlist and we get tvg-id from table and search this
+-- in EPG channel id. If we no have tvg-id in M3U we can use
+-- media-title for search channel in EPG by display-name, can be multiple
+-- or if we no have media-title we just search by tvg-id, BUT some
+-- playlist no have tvg-id and no have media-title in this case we
+-- can find stream url in EPG data as tvg-id or OMG some EPG + M3U
+-- used last path in stream URL ad id in EPG channel id and we can
+-- find by it. :D
+-- In reality we create twoo lookup tables:
+--
+--     list_epg_ids[media-title] = tvg-id       -- if we have id and title
+--     list_epg_ids[media-title] = media-title  -- if we have only title
+--     list_epg_ids[tvg-id]      = tvg-id       -- if we have only id
+--     list_url_ids[stream_url]  = tvg-id       -- if we have id and title
+--     list_url_ids[stream_url]  = media-title  -- if we have only title
+--
+-- In `epg_show()` we can get media-title + stream_url and uses lookup
+-- tables get tvg-id or media-title or stream url slice patch (see epg_show)
+--
+-- If playlist no have media-title and no have tvg-id we create lookup table
+-- just for stream links, like this:
+--
+--    list_url_stream[https://blabla/tvname.m3u8] = tvname.m3u8
+--    list_url_stream[tvname.m3u8] = https://blabla/tvname.m3u8
+--
+-- Yep, some IPTV provider playlists use this combination
+--
+-- M3U data: (just stream url and nothing more)
+--
+-- #EXTINF:-1 tvg-logo="https://example.com/name.png"
+-- https://example.com/bla/blabla/blublu/1HDG02X      <------.
+--                                                           |
+-- EPG data: (chanel is is URL file path)                    |
+--                                                           |
+-- <channel id="1HDG02X">    <-------------------------------|
+--        <display-name>Channel name</display-name>          |
+--        <display-name>1HDG02X</display-name>     <------------------------.
+--        <display-name>CHANEL NAME</display-name>                          |
+-- </channel>                                                               |
+--                                                                          |
+-- <programme start="time +0300" stop="time +0300" channel="1HDG02X">  <----.
+--     <desc>super best awesome TV show!</desc>
+--     <title>Super Puper</title>
+-- </programme>
+--
+-- And single way handle this trash :D it find stream URL or stream URL slice
+-- mpv can say only media-title or stream url slice as media-title in play time
+--
+-- This example is an extreme case, in most cases the playlists are well
+-- prepared, they have identifiers, names, links to streams and TV program
+-- guides, everything is coordinated and good :)
 -------------------------------------------------------------------------------
 local function get_epg_ids_from_m3u()
    local m3u_data = get_m3u_data()
    if not m3u_data then
       return
    end
+
    local curr_name = nil
    for line in m3u_data:gmatch('[^\n]+') do
        if line:find('#EXTINF') then
@@ -1032,15 +1112,29 @@ local function get_epg_ids_from_m3u()
              curr_name = name
           elseif name then
              curr_name = normalize(name)
+             list_epg_ids[curr_name]=curr_name
+          elseif id then
+             curr_name = id
+             list_epg_ids[id] = id
+             ihas_epg_ids = true
           end
-       elseif line:find('://') and not line:find(' ') and curr_name then
-          message(msg_text.found_stream..' '..curr_name)
-          list_url_ids[line]=curr_name
-          ihas_url_ids = true
-          curr_name = nil
+       elseif line:find('://') and not line:find(' ') then
+          if curr_name then
+             message(msg_text.found_stream..' '..curr_name)
+             list_url_ids[line]=curr_name
+             ihas_url_ids = true
+             curr_name = nil
+          else
+             local stream_slice_path = line:match('[^/]+$')
+             if stream_slice_path then
+                list_url_stream[line] = stream_slice_path
+                list_url_stream[stream_slice_path] = line
+                ihas_url_stream = true
+             end
+          end
        end
    end
-   return ihas_epg_ids or ihas_url_ids
+   return (ihas_epg_ids or ihas_url_ids or ihas_url_stream)
 end
 -------------------------------------------------------------------------------
 -- Try find url-tvg links in M3U playlist
@@ -1147,50 +1241,77 @@ local function save_epg_cache_to_file(cache_table,output_file,source_url)
       if not source_url or not output_file or not cache_table then
          return false
       end
-      local currname = nil
+      local curr_name = nil
+      local curr_channel = nil
       local file_cache = io.open(output_file,'w')
       local file_cache_index = io.open(output_file..'_index','w')
       if not file_cache or not file_cache_index then
          return false
       end
-      list_epg_cache_index[output_file] = {  }
+      local index = { }
       file_cache:write(config.cache_file_head..'='..source_url,'\n')
-      local fmts = '%s "%s" %s %s %s "%s" "%s"\n'
-      for name,val in pairs(cache_table) do
+      local fmts = '%s %s %s %s %s "%s" "%s"\n'
+      for channel,val in pairs(cache_table) do
           for _,x in ipairs(val) do
-             local str = fmts:format(name,x.name,x.start,x.stop,
-                                          x.zone,x.title,x.desc)
-            if not currname then
-                local offset = file_cache:seek('cur')
-                currname = name
-                list_epg_cache_index[output_file][name] = { }
-                file_cache_index:write(name,', ',offset,', ')
-                list_epg_cache_index[output_file][name].from = offset
+             local aliases_bundl = { }
+             for _,aliase in pairs(x.name) do
+                 aliases_bundl[#aliases_bundl+1] = '"'..aliase..'"'
              end
 
-             if currname ~= name then
+             local str = fmts:format(channel,(table.concat(aliases_bundl,' ')),
+                                          x.start,x.stop,x.zone,x.title,x.desc)
+
+             if not curr_name and not curr_channel then
+                local offset = file_cache:seek('cur')
+                curr_channel = channel
+                curr_name    = x.name
+                index[channel] = { from = offset }
+                for _,aliase in pairs(x.name) do
+                    index[aliase]  = { from = offset }
+                end
+                file_cache_index:write(channel,', ',offset,', ')
+             end
+
+             if curr_channel ~= channel then
                 local offset = file_cache:seek('cur')
                 file_cache_index:write(offset,'\n')
-                list_epg_cache_index[output_file][currname].to = offset
-                currname = name
-                list_epg_cache_index[output_file][name] = { }
-                list_epg_cache_index[output_file][name].from = offset
-                file_cache_index:write(name,', ',offset,', ')
-             end
+                index[curr_channel].to = offset
+               for _,aliase in pairs(curr_name) do
+                    index[aliase].to = offset
+                    file_cache_index:write(aliase,', ',
+                                           index[aliase].from,', ',
+                                           index[aliase].to,'\n')
+                end
+                curr_channel = channel
+                curr_name = x.name
 
+                index[channel] = { from = offset }
+                for _,aliase in pairs(x.name) do
+                    index[aliase]  = { from = offset }
+                end
+                file_cache_index:write(channel,', ',offset,', ')
+             end
              file_cache:write(str)
           end
       end
-      local offset = file_cache:seek('cur')
-      file_cache_index:write(offset,'\n')
-      list_epg_cache_index[output_file][currname].to = offset
-
+      if curr_channel and curr_name then
+         local offset = file_cache:seek('cur')
+         file_cache_index:write(offset,'\n')
+         index[curr_channel].to = offset
+         for _,aliase in pairs(curr_name) do
+             index[aliase].to = offset
+             file_cache_index:write(aliase,', ',
+                                    index[aliase].from,', ',
+                                    index[aliase].to,'\n')
+         end
+      end
       file_cache:flush()
       file_cache:close()
 
       file_cache_index:flush()
       file_cache_index:close()
 
+      list_epg_cache_index[output_file] = index
       return true
 end
 -------------------------------------------------------------------------------
@@ -1219,6 +1340,7 @@ local function parse_epg_data(data)
       return { }
    end
    local programme    = {   }
+   local programme_aliace = {   }
    local channels     = {   }
    local is_programme = false
    local is_title     = false
@@ -1231,7 +1353,7 @@ local function parse_epg_data(data)
    local channel = nil
    local title   = nil
    local desc    = nil
-   local display_name = nil
+   local display_name = { }
    local channel_id   = nil
    local parser = SLAXML:parser
    {
@@ -1279,15 +1401,19 @@ local function parse_epg_data(data)
                  programme[channel][#programme[channel]+1] =
                  {
                     title = title;
-                     name = channels[channel] or '#';
+                     name = channels[channel] or {'#'};
                     start = start:match('(%d+)%s-');  -- del timezone
                      stop = stop:match('(%d+)%s-');   -- del timezone
                      desc = desc;
                      zone = get_time_zone(start);
                  }
+
                  if channels[channel] then
-                    programme[channels[channel]] = programme[channel]
+                    for _,aliase in pairs(channels[channel]) do
+                        programme_aliace[aliase] = programme[channel]
+                    end
                  end
+
                  title   = nil
                  start   = nil
                  stop    = nil
@@ -1297,12 +1423,17 @@ local function parse_epg_data(data)
               is_programme = false
            end
            if name == 'channel' then
-              mp_msg.info(channel_id,' # ',display_name)
-              if channel_id and display_name then
-                 channels[channel_id] = display_name
+              if channel_id and #display_name > 0 then
+                 if not channels[channel_id] then
+                    channels[channel_id] = { }
+                 end
+                 for _,aliase in ipairs(display_name) do
+                     channels[channel_id][#channels[channel_id]+1] = aliase
+                     mp_msg.info(channel_id,' -> ',aliase)
+                 end
               end
               channel_id   = nil
-              display_name = nil
+              display_name = { }
               is_channel = false
            end
            if name == 'display_name' then
@@ -1323,14 +1454,17 @@ local function parse_epg_data(data)
               desc = text
            end
            if is_display_name and is_channel then
-              display_name = text
+              display_name[#display_name+1] = text
            end
      end;
    }
-   if not (pcall(SLAXML.parse,parser,data,{stripWhitespace=true})) then
+
+   local  ok, err = pcall(SLAXML.parse,parser,data,{stripWhitespace=true})
+   if not ok then
+      mp_msg.error(err)
       return nil
    end
-   return programme
+   return programme, programme_aliace
 end
 -------------------------------------------------------------------------------
 -- Generate index file from EPG cache file for first start in new default
@@ -1340,45 +1474,75 @@ end
 -- this function call once for old users or if index file deleted for example
 -------------------------------------------------------------------------------
 local function generate_cache_index_from_file(cache_filename)
-     local curr_channel = nil
      local file_cache = io.open(cache_filename,'r')
      local file_cache_index = io.open(cache_filename..'_index','w')
      if not file_cache or not file_cache_index then
         return false
      end
-     list_epg_cache_index[cache_filename] = {  }
-     local fmts = '(.-)%s"(.-)"%s(.-)%s(.-)%s(%d+)%s"(.-)"%s"(.-)"$'
+     local index = { }
+     local curr_name = nil
+     local curr_channel = nil
+     local fmts = '(.-)%s(.-)%s(%d+)%s(%d+)%s(%d+)%s"(.-)"%s"(.-)"$'
      for line in file_cache:lines() do
          local channel,name,start,stop,zone,title,desc = line:match(fmts)
          if channel and name and start and stop and zone and title and desc then
-            if not curr_channel then
-               local offset = file_cache:seek('cur') - #line - 1
-               curr_channel = channel
-               list_epg_cache_index[cache_filename][channel] = { }
-               file_cache_index:write(channel,', ',offset,', ')
-               list_epg_cache_index[cache_filename][channel].from = offset
+
+            local aliases = { }
+            for aliase in name:gmatch('"(.-)"') do
+                aliases[#aliases+1] = aliase
             end
 
+            if not curr_channel and not curr_name then
+               local offset = file_cache:seek('cur') - #line - 1
+               curr_channel = channel
+               curr_name    = aliases
+               index[channel] = { from = offset }
+               for _,aliase in ipairs(aliases) do
+                  index[aliase] = { from = offset }
+               end
+               file_cache_index:write(channel,', ',offset,', ')
+            end
+            ---
             if curr_channel ~= channel then
                local offset = file_cache:seek('cur') - #line - 1
                file_cache_index:write(offset,'\n')
-               list_epg_cache_index[cache_filename][curr_channel].to = offset
+               index[curr_channel].to = offset
+               for _,aliase in ipairs(curr_name) do
+                  index[aliase].to = offset
+                  file_cache_index:write(aliase,', ',
+                                         index[aliase].from,', ',
+                                         index[aliase].to,'\n')
+               end
                curr_channel = channel
-               list_epg_cache_index[cache_filename][channel] = { }
-               list_epg_cache_index[cache_filename][channel].from = offset
+               curr_name    = aliases
+
+               index[channel] = { from = offset }
+               for _,aliase in ipairs(aliases) do
+                   index[aliase] = { from = offset }
+               end
                file_cache_index:write(channel,', ',offset,', ')
             end
          end
      end
-
-     if curr_channel then
+     ---
+     if curr_channel and curr_name then
         local offset = file_cache:seek('cur')
         file_cache_index:write(offset,'\n')
-        list_epg_cache_index[cache_filename][curr_channel].to = offset
+        index[curr_channel].to = offset
+        for _,aliase in ipairs(curr_name) do
+            index[aliase].to = offset
+            file_cache_index:write(aliase,', ',
+                                   index[aliase].from,', ',
+                                   index[aliase].to,'\n')
+        end
      end
-
+     ---
      file_cache:close()
+
+     file_cache_index:flush()
      file_cache_index:close()
+
+     list_epg_cache_index[cache_filename] = index
      return true
 end
 -------------------------------------------------------------------------------
@@ -1422,35 +1586,45 @@ local function load_epg_cache_from_file(source_file,from,to)
         end
      end
      ---
-     local data = nil
-     local fmts = '(.-)%s"(.-)"%s(.-)%s(.-)%s(%d+)%s"(.-)"%s"(.-)"$'
+     local cache = nil
+     local cache_aliase = nil
+     local fmts = '(.-)%s(.-)%s(%d+)%s(%d+)%s(%d+)%s"(.-)"%s"(.-)"$'
      for line in iterator(source_file) do
          local channel,name,start,stop,zone,title,desc = line:match(fmts)
          if channel and name and start and stop and zone and title and desc then
-            if not data then
-               data = { }
+            if not cache then
+               cache = { }
+               cache_aliase = { }
             end
-            if not data[channel] then
-               data[channel] = { }
+            if not cache[channel] then
+               cache[channel] = { }
             end
-            data[channel][#data[channel]+1] =
+
+            local aliases = { }
+            for aliase in name:gmatch('"(.-)"') do
+                aliases[#aliases+1] = aliase
+            end
+
+            cache[channel][#cache[channel]+1] =
             {
                 title = title;
                 start = start;
-                name  = name;
+                name  = aliases;
                 stop  = stop;
                 desc  = desc;
                 zone  = tonumber(zone);
             }
-            if data[channel][#data[channel]].name ~= '#' then
-               data[data[channel][#data[channel]].name] = data[channel]
+            for _, aliase in pairs(aliases) do
+               if aliase ~= '#' and not cache_aliase[aliase] then
+                  cache_aliase[aliase] = cache[channel]
+               end
             end
          end
      end
      if type(source_file) == 'userdata' then
         source_file:close()
      end
-     return data
+     return cache, cache_aliase
 end
 -------------------------------------------------------------------------------
 -- Get EPG data from url-tvg M3U link, EPG can be
@@ -1479,13 +1653,13 @@ local function get_epg_data(force_download)
               --
               if data then
                  message(msg_text.parse_tv_program)
-                 local cache = parse_epg_data(data)
+                 local cache, cache_aliace = parse_epg_data(data)
 
-                 data = nil -- force clear unused data
+                 data = nil -- luacheck: ignore
                  collectgarbage('collect')
 
                  if not cache then
-                    message(msg_text.failed_get_data_from..' '..url)
+                    message(msg_text.failed_parse_tv_program..' '..fileshort)
                     return
                  end
 
@@ -1494,8 +1668,10 @@ local function get_epg_data(force_download)
 
                  if config.all_cache_in_memory then
                     list_epg_cache[filename] = cache
+                    list_epg_cache_aliace[filename] = cache_aliace
                  else
-                    cache = nil -- force clear unused data
+                    cache = nil -- luacheck: ignore
+                    cache_aliace = nil -- luacheck: ignore
                     collectgarbage('collect')
                  end
               else
@@ -1505,9 +1681,10 @@ local function get_epg_data(force_download)
              -- load all cache in memory
              if config.all_cache_in_memory  then
                 message(msg_text.load_tv_cache..' '..fileshort)
-                local cache = load_epg_cache_from_file(filename)
+                local cache, cache_aliace = load_epg_cache_from_file(filename)
                 if cache then
                    list_epg_cache[filename] = cache
+                   list_epg_cache_aliace[filename] = cache_aliace
                 else
                    message(msg_text.failed_get_data_from..' '..fileshort)
                 end
@@ -1526,6 +1703,7 @@ local function get_epg_data(force_download)
                 message(msg_text.cache_allready_loaded)
            end
         end
+
     end
 end
 -------------------------------------------------------------------------------
@@ -1597,7 +1775,8 @@ local function get_tv_programm(el,channel,mode)
            local progress = calculatePercentage(progstart,progstop,today_long)
            ---
            if config.top_title_playinfo_style == 1 then
-              local fmts = '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
+              local fmts =
+              '{\\b1\\bord2\\fs%s\\1c&H%s}%s {\\fs%s}(%s%%) (%s - %s)\\N'
               -- set current channel programme
               now.title = fmts:format(config.title_size,
                                       config.title_color,n.title,
@@ -1605,17 +1784,23 @@ local function get_tv_programm(el,channel,mode)
            end
            ---
            if config.top_title_playinfo_style == 2 then
-               local fmts = '{\\fs%s\\1c&H%s}(%s%%) (%s - %s)  {\\b1\\bord2\\fs%s\\1c&H%s}%s \\N'
-               -- set current channel programme
-               now.title = fmts:format(config.progress_size,config.title_color,progress,start,stop,
-                                       config.title_size,
-                                       config.title_color,n.title)
+              local fmts =
+              '{\\fs%s\\1c&H%s}(%s%%) (%s - %s)  {\\b1\\bord2\\fs%s\\1c&H%s}%s \\N'
+              -- set current channel programme
+              now.title = fmts:format(config.progress_size,
+                                      config.title_color,
+                                      progress,start,stop,
+                                      config.title_size,
+                                      config.title_color,n.title)
            end
            ---
            if config.top_title_playinfo_style == 3 then
-               local fmts = '{\\fs%s\\1c&H%s}(%s%%) (%s - %s) \\N {\\b1\\bord2\\fs%s\\1c&H%s}%s \\N'
+               local fmts =
+               '{\\fs%s\\1c&H%s}(%s%%) (%s - %s) \\N {\\b1\\bord2\\fs%s\\1c&H%s}%s \\N'
                -- set current channel programme
-               now.title = fmts:format(config.progress_size,config.title_color,progress,start,stop,
+               now.title = fmts:format(config.progress_size,
+                                       config.title_color,
+                                       progress,start,stop,
                                        config.title_size,
                                        config.title_color,n.title)
            end
@@ -1631,7 +1816,7 @@ local function get_tv_programm(el,channel,mode)
         elseif progstart > today_long  then
            if not mode_light then
                 local fmts = '{\\b1\\be\\fs%s\\1c&H%s&}(%s – %s){\\b0\\fs%s} %s'..
-                                ' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
+                             ' \n {\\1c&%s&\\b0\\bord0\\fs%s\\q3} %s\\N'
                 -- set upcoming channel programmes
                 local  prog = fmts:format(config.upcoming_time_size,
                                             config.upcoming_color,start,stop,
@@ -1697,6 +1882,10 @@ end
 -------------------------------------------------------------------------------
 -- After prepare M3U and EPG data we try find 'tvg-id' from 'media-title'
 -- if found, we try find TV programms in EPG data, if found, prepare and show
+-- some playlists. In extrime case in last time we try search by stream url
+-- if playlist no have tvg-id we try search channel by media-title with
+-- display-name from EPG, EPG can have multiple display-name`s for one channel
+-- display-name uses as aliases to channel name in EPG
 -------------------------------------------------------------------------------
 local function show_epg(mode,show_type)
   if not new_file_is_m3u() then
@@ -1711,12 +1900,27 @@ local function show_epg(mode,show_type)
   end
   local data = nil
   local search_variants = {  }
-  -- tv id     | try find from normal tvg-id channel name
-  search_variants[1] = list_epg_ids[normalize(mp.get_property('media-title'))]
+
+  -- tv id     | try find from tvg-id channel name
+  search_variants[#search_variants+1] =
+  list_epg_ids[normalize(mp.get_property('media-title'))]
+
+  -- tv media  | try find raw media title if no have tvg-id
+  search_variants[#search_variants+1] =
+  normalize(mp.get_property('media-title'))
+
   -- tv title  | try find from media title stream url, if no have tvg-id
-  search_variants[2] = list_url_ids[mp.get_property('stream-open-filename')]
+  search_variants[#search_variants+1] =
+  list_url_ids[mp.get_property('stream-open-filename')]
+
   -- tv stream | try find from stream url slice, if no have other info
-  search_variants[3] = (mp.get_property('stream-open-filename') or ''):match('[^/]+$')
+  search_variants[#search_variants+1] =
+  list_url_stream[mp.get_property('stream-open-filename')]
+
+  -- tv stream | try find from stream url slice, if no have other info
+  search_variants[#search_variants+1] =
+  list_url_stream[normalize(mp.get_property('media-title'))]
+
   -------------------------------------------------
   -- use index file cache for dynamicly EPG load --
   -------------------------------------------------
@@ -1728,15 +1932,26 @@ local function show_epg(mode,show_type)
                   local from = index_cache[channelID].from
                   local to = index_cache[channelID].to
                   if from and to then
-                     local tvdata = load_epg_cache_from_file(filename,from,to)
+                     local tvdata,
+                           aliase = load_epg_cache_from_file(filename,from,to)
                      data = get_tv_programm(tvdata,channelID,mode)
+                     if data then
+                        break
+                     end
+                     data = get_tv_programm(aliase,channelID,mode)
+                     if data then
+                        break
+                     end
                   end
-                  if data then
-                     break
-                  end
+
                end
            end
         end
+        ---
+        if data then
+           break
+        end
+        ---
      end
   end
   -------------------------------------------------
@@ -1752,6 +1967,24 @@ local function show_epg(mode,show_type)
                end
            end
         end
+        --
+        if data then
+            break
+        end
+        --
+        if channelID and list_epg_cache_aliace then
+           for _,tvdata in pairs(list_epg_cache_aliace) do
+               data = get_tv_programm(tvdata,channelID,mode)
+               if data then
+                  break
+               end
+           end
+        end
+        --
+        if data then
+           break
+        end
+        --
      end
   end
   ---
@@ -1773,6 +2006,8 @@ local function show_epg(mode,show_type)
      ass.text = ''
      curr_program_list = nil
      program_is_visible = false
+     curr_program_start = 0
+     curr_program_stop  = 0
   else
      if mode == mode_manual then
         local table_slice =
@@ -1830,30 +2065,7 @@ local function next_programms()
     ov:update()
     program_is_visible = true
 end
--------------------------------------------------------------------------------
--- Get m3u data, find channels tvg-id and url-tvg EPG link, download EPG and
--- save to cache, if EPG is `gz` archive unpack, XML data once parsing and
--- save as plain text to cache, if cache data found, load cache data
--------------------------------------------------------------------------------
-local function load_epg()
-    local playlist = mp.get_property('playlist-path')
-    if not playlist then
-       return
-    end
-    if playlist == curr_playlist then
-       return
-    end
-    curr_playlist = playlist
-    if new_file_is_m3u() then
-       clear_epgtv_state()
-       if get_epg_ids_from_m3u() then
-          if get_epg_url_from_m3u() then
-             get_epg_data()
-          end
-       end
-    end
-    show_epg(config.auto_show_mode,'auto')
-end
+
 -------------------------------------------------------------------------------
 -- Force update EPG data for current M3U
 -------------------------------------------------------------------------------
@@ -1864,6 +2076,9 @@ local function update_current_epg()
        if get_epg_ids_from_m3u() then
           if get_epg_url_from_m3u() then
              get_epg_data(force_update)
+          else
+             message(msg_text.no_have_url_to_update_epg)
+             return
           end
        end
     end
@@ -1885,6 +2100,8 @@ local function load_all_epg_cache()
                  message(msg_text.load_tv_cache..' '..file)
                  local cache = load_epg_cache_from_file(fullpath)
                  if cache then
+                    config.ignore_noepg_m3u = false
+                    get_epg_ids_from_m3u()
                     list_epg_cache[fullpath] = cache
                  else
                     message(msg_text.skip..' '..file)
@@ -1896,12 +2113,15 @@ local function load_all_epg_cache()
            -- force load only index of EPG cache in to RAM
            if not config.all_cache_in_memory and fullpath:find('_index$') then
               if not list_epg_cache_index[fullpath] then
-                 message(msg_text.load_tv_cache_index..' '..file..'_index')
-                 local index = load_epg_cache_index_from_file(fullpath..'_index')
+                 message(msg_text.load_tv_cache_index..' '..file)
+                 local index = load_epg_cache_index_from_file(fullpath)
                  if index then
-                    list_epg_cache_index[fullpath] = index
+                    config.ignore_noepg_m3u = false
+                    get_epg_ids_from_m3u()
+                    local cache_file_path = fullpath:gsub('_index$','')
+                    list_epg_cache_index[cache_file_path] = index
                  else
-                    message(msg_text.skip..' '..file..'_index')
+                    message(msg_text.skip..' '..file)
                  end
               else
                   message(msg_text.cache_index_allready_loaded)
@@ -1912,6 +2132,33 @@ local function load_all_epg_cache()
         message(msg_text.no_have_cache)
     end
     show_epg(config.manual_show_mode,'manual')
+end
+-------------------------------------------------------------------------------
+-- Get m3u data, find channels tvg-id and url-tvg EPG link, download EPG and
+-- save to cache, if EPG is `gz` archive unpack, XML data once parsing and
+-- save as plain text to cache, if cache data found, load cache data
+-------------------------------------------------------------------------------
+local function load_epg()
+    local playlist = mp.get_property('playlist-path')
+    if not playlist then
+       return
+    end
+    if playlist == curr_playlist then
+       return
+    end
+    curr_playlist = playlist
+    if new_file_is_m3u() then
+       clear_epgtv_state()
+       if get_epg_ids_from_m3u() then  -- тут блокируется подгрузка
+          if get_epg_url_from_m3u() then -- если нет ни tvg-id ни display name
+             get_epg_data()
+          elseif not config.ignore_noepg_m3u then
+              load_all_epg_cache()
+          end
+       end
+    end
+
+    show_epg(config.auto_show_mode,'auto')
 end
 -------------------------------------------------------------------------------
 -- Set key bindings
