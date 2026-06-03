@@ -13,9 +13,6 @@
  * Работает на `GNU/Linux Debian 12,13,14`
  * Работает на `Windows 7` (Информацию специфичную для Windows смотрите внизу этого README)
 
-## Альтернатива
-
- * https://codeberg.org/liya/yuki-iptv
 
 ## Снимок экрана
 

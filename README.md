@@ -14,9 +14,6 @@ becouse cache not prepared, other starts faster and reuse cache.
   * Worked on `GNU/Linux Debian 12,13,14`
   * Worked on `Windows 7` (See Windows specific info in end of README )
 
-## Alternative
-
-* https://codeberg.org/liya/yuki-iptv
 
 ## Screenshot
 
